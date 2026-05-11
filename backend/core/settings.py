@@ -14,8 +14,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Core Security
 # ---------------------------------------------------------------------------
 SECRET_KEY = config("SECRET_KEY")
-DEBUG = config("DEBUG", default=False, cast=bool)
-ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1", cast=Csv())
+DEBUG = config("DEBUG", cast=bool)
+ALLOWED_HOSTS = config("ALLOWED_HOSTS", cast=Csv())
 
 # ---------------------------------------------------------------------------
 # Application Definition
@@ -83,12 +83,12 @@ ASGI_APPLICATION = "core.asgi.application"
 # ---------------------------------------------------------------------------
 DATABASES = {
     "default": {
-        "ENGINE": config("DB_ENGINE", default="django.db.backends.postgresql"),
-        "NAME": config("DB_NAME", default="home_inventory"),
-        "USER": config("DB_USER", default="postgres"),
-        "PASSWORD": config("DB_PASSWORD", default="postgres"),
-        "HOST": config("DB_HOST", default="localhost"),
-        "PORT": config("DB_PORT", default="5432"),
+        "ENGINE": config("DB_ENGINE"),
+        "NAME": config("DB_NAME"),
+        "USER": config("DB_USER"),
+        "PASSWORD": config("DB_PASSWORD"),
+        "HOST": config("DB_HOST"),
+        "PORT": config("DB_PORT", cast=int),
         "CONN_MAX_AGE": 60,
         "OPTIONS": {
             "connect_timeout": 10,
@@ -102,7 +102,7 @@ DATABASES = {
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": config("REDIS_URL", default="redis://localhost:6379/0"),
+        "LOCATION": config("REDIS_URL"),
     }
 }
 
@@ -113,7 +113,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [config("CHANNEL_LAYERS_URL", default="redis://localhost:6379/3")],
+            "hosts": [config("CHANNEL_LAYERS_URL")],
         },
     }
 }
@@ -121,28 +121,20 @@ CHANNEL_LAYERS = {
 # ---------------------------------------------------------------------------
 # Session & CSRF Security
 # ---------------------------------------------------------------------------
-SESSION_COOKIE_HTTPONLY = config("SESSION_COOKIE_HTTPONLY", default=True, cast=bool)
-SESSION_COOKIE_SECURE = config("SESSION_COOKIE_SECURE", default=False, cast=bool)
-SESSION_COOKIE_AGE = config("SESSION_COOKIE_AGE", default=86400, cast=int)
+SESSION_COOKIE_HTTPONLY = config("SESSION_COOKIE_HTTPONLY", cast=bool)
+SESSION_COOKIE_SECURE = config("SESSION_COOKIE_SECURE", cast=bool)
+SESSION_COOKIE_AGE = config("SESSION_COOKIE_AGE", cast=int)
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 
-CSRF_COOKIE_HTTPONLY = config("CSRF_COOKIE_HTTPONLY", default=True, cast=bool)
-CSRF_COOKIE_SECURE = config("CSRF_COOKIE_SECURE", default=False, cast=bool)
-CSRF_TRUSTED_ORIGINS = config(
-    "CSRF_TRUSTED_ORIGINS",
-    default="http://localhost:5173,http://127.0.0.1:5173",
-    cast=Csv(),
-)
+CSRF_COOKIE_HTTPONLY = config("CSRF_COOKIE_HTTPONLY", cast=bool)
+CSRF_COOKIE_SECURE = config("CSRF_COOKIE_SECURE", cast=bool)
+CSRF_TRUSTED_ORIGINS = config("CSRF_TRUSTED_ORIGINS", cast=Csv())
 
 # ---------------------------------------------------------------------------
 # CORS
 # ---------------------------------------------------------------------------
-CORS_ALLOWED_ORIGINS = config(
-    "CORS_ALLOWED_ORIGINS",
-    default="http://localhost:5173,http://127.0.0.1:5173",
-    cast=Csv(),
-)
-CORS_ALLOW_CREDENTIALS = config("CORS_ALLOW_CREDENTIALS", default=True, cast=bool)
+CORS_ALLOWED_ORIGINS = config("CORS_ALLOWED_ORIGINS", cast=Csv())
+CORS_ALLOW_CREDENTIALS = config("CORS_ALLOW_CREDENTIALS", cast=bool)
 
 # ---------------------------------------------------------------------------
 # Django REST Framework
@@ -175,11 +167,11 @@ REST_FRAMEWORK = {
 # ---------------------------------------------------------------------------
 # Celery
 # ---------------------------------------------------------------------------
-CELERY_BROKER_URL = config("CELERY_BROKER_URL", default="redis://localhost:6379/1")
-CELERY_RESULT_BACKEND = config("CELERY_RESULT_BACKEND", default="redis://localhost:6379/2")
-CELERY_TIMEZONE = config("CELERY_TIMEZONE", default="UTC")
-CELERY_TASK_TRACK_STARTED = config("CELERY_TASK_TRACK_STARTED", default=True, cast=bool)
-CELERY_TASK_TIME_LIMIT = config("CELERY_TASK_TIME_LIMIT", default=300, cast=int)
+CELERY_BROKER_URL = config("CELERY_BROKER_URL")
+CELERY_RESULT_BACKEND = config("CELERY_RESULT_BACKEND")
+CELERY_TIMEZONE = config("CELERY_TIMEZONE")
+CELERY_TASK_TRACK_STARTED = config("CELERY_TASK_TRACK_STARTED", cast=bool)
+CELERY_TASK_TIME_LIMIT = config("CELERY_TASK_TIME_LIMIT", cast=int)
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_ACCEPT_CONTENT = ["json"]
@@ -187,30 +179,26 @@ CELERY_ACCEPT_CONTENT = ["json"]
 # ---------------------------------------------------------------------------
 # Static & Media Files
 # ---------------------------------------------------------------------------
-STATIC_URL = config("STATIC_URL", default="/static/")
+STATIC_URL = config("STATIC_URL")
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-MEDIA_URL = config("MEDIA_URL", default="/media/")
-MEDIA_ROOT = BASE_DIR / config("MEDIA_ROOT", default="media")
+MEDIA_URL = config("MEDIA_URL")
+MEDIA_ROOT = BASE_DIR / config("MEDIA_ROOT")
 
 # ---------------------------------------------------------------------------
 # Email
 # ---------------------------------------------------------------------------
-EMAIL_BACKEND = config(
-    "EMAIL_BACKEND",
-    default="django.core.mail.backends.console.EmailBackend",
-)
-EMAIL_HOST = config("EMAIL_HOST", default="localhost")
-EMAIL_PORT = config("EMAIL_PORT", default=1025, cast=int)
-EMAIL_USE_TLS = config("EMAIL_USE_TLS", default=False, cast=bool)
-DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="noreply@homeinventory.local")
+EMAIL_BACKEND = config("EMAIL_BACKEND")
+EMAIL_HOST = config("EMAIL_HOST")
+EMAIL_PORT = config("EMAIL_PORT", cast=int)
+EMAIL_USE_TLS = config("EMAIL_USE_TLS", cast=bool)
+DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL")
 
 # ---------------------------------------------------------------------------
 # django-axes (Brute-force Protection)
 # ---------------------------------------------------------------------------
-AXES_FAILURE_LIMIT = config("AXES_FAILURE_LIMIT", default=5, cast=int)
-AXES_COOLOFF_TIME = config("AXES_COOLOFF_TIME", default=1, cast=int)  # hours
-AXES_LOCKOUT_TEMPLATE = config("AXES_LOCKOUT_TEMPLATE", default=None)
+AXES_FAILURE_LIMIT = config("AXES_FAILURE_LIMIT", cast=int)
+AXES_COOLOFF_TIME = config("AXES_COOLOFF_TIME", cast=int)  # hours
 AXES_RESET_ON_SUCCESS = True
 
 AUTHENTICATION_BACKENDS = [
@@ -244,7 +232,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # ---------------------------------------------------------------------------
 # Logging
 # ---------------------------------------------------------------------------
-LOG_LEVEL = config("LOG_LEVEL", default="INFO")
+LOG_LEVEL = config("LOG_LEVEL")
 
 LOGGING = {
     "version": 1,
@@ -301,4 +289,3 @@ LOGGING = {
         },
     },
 }
-
