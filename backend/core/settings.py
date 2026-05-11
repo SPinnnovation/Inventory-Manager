@@ -81,6 +81,8 @@ TEMPLATES = [
 WSGI_APPLICATION = "core.wsgi.application"
 ASGI_APPLICATION = "core.asgi.application"
 
+AUTH_USER_MODEL = 'accounts.User'
+
 # ---------------------------------------------------------------------------
 # Database — PostgreSQL
 # ---------------------------------------------------------------------------
