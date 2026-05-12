@@ -40,33 +40,8 @@ class AuthViewset(viewsets.ViewSet):
     @action(
         detail=False,
         methods=["post"],
-        permisssion_classes=[AllowAny],
-        url_path="login",
-    )
-    def login(self, request):
-        """
-        Authenticate with email and password and establish a session. Returns user details on success.
-        """
-        serializer = LoginSerializer(data=request.data) # Validate the input data using the LoginSerializer
-        
-        serializer.is_valid(raise_exception=True) # Raise a validation error if the input data is invalid
-        
-        user = authenticate_user(
-            request,
-            email=serializer.validated_data["email"],
-            password=serializer.validated_data["password"],        
-        )
-        
-        return Response(
-            MeSerializer(user).data, # Serialize the authenticated user data using MeSerializer
-            status=status.HTTP_200_OK,
-        )
-        
-       
-    @action(
-        detail=False,
-        methods=["post"],
         permission_classes=[AllowAny],
+        authentication_classes=[],  # No auth = no CSRF enforcement; login is a public endpoint
         url_path="login",
     )
     def login(self, request):
