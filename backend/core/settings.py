@@ -81,8 +81,6 @@ TEMPLATES = [
 WSGI_APPLICATION = "core.wsgi.application"
 ASGI_APPLICATION = "core.asgi.application"
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
 AUTH_USER_MODEL = 'accounts.User'
 
 # ---------------------------------------------------------------------------
