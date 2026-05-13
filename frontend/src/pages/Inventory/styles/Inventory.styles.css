@@ -1,0 +1,35 @@
+.page { display: flex; flex-direction: column; gap: var(--space-lg); }
+.toolbar { display: flex; align-items: center; gap: var(--space-md); flex-wrap: wrap; }
+.search {
+  flex: 1; min-width: 220px; max-width: 400px;
+  padding: 0.6rem var(--space-md); border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md); font-size: var(--text-sm); font-family: var(--font-sans);
+  background: var(--color-surface); color: var(--color-text); outline: none;
+}
+.search:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-light); }
+.count { font-size: var(--text-sm); color: var(--color-text-muted); white-space: nowrap; }
+
+.tableWrapper { background: var(--color-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+.table th {
+  text-align: left; padding: var(--space-sm) var(--space-md);
+  color: var(--color-text-muted); font-weight: 600; font-size: var(--text-xs);
+  text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+.table td { padding: var(--space-sm) var(--space-md); border-bottom: 1px solid var(--color-border); }
+.table tr:last-child td { border-bottom: none; }
+.table tr:hover td { background: #f8fafc; }
+
+.itemName { font-weight: 500; }
+.mono { font-family: monospace; font-size: var(--text-xs); color: var(--color-text-muted); }
+.muted { color: var(--color-text-muted); }
+.qtyZero { color: var(--color-error); font-weight: 600; }
+.empty { text-align: center; padding: var(--space-2xl) !important; color: var(--color-text-muted); }
+
+.badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: var(--text-xs); font-weight: 500; }
+.statusGreen  { background: var(--color-success-light); color: #15803d; }
+.statusOrange { background: var(--color-warning-light); color: #b45309; }
+.statusRed    { background: var(--color-error-light);   color: #b91c1c; }
+
+.mockNote { font-size: var(--text-xs); color: var(--color-text-light); text-align: right; }

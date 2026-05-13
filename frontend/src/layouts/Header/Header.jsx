@@ -2,6 +2,7 @@ import React from 'react'
 import styles from './styles/Header.module.css';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
+import Button from '../../components/common/Button/Button';
 
 
 const PAGE_TITLES = {
@@ -30,11 +31,14 @@ const Header = () => {
         <h1 className={styles.title}>{title}</h1>
 
         <div className={styles.actions}>
-            {user && (
+            {/* {user && (
                 <Button variant="outline" size="sm" onClick={handleLogout}>
                     Logout
                 </Button>
-            )}
+            )} */}
+            <Button onClick={handleLogout} variant='outline' size='sm'>
+                Logout
+            </Button>
         </div>
     </header>
   )
