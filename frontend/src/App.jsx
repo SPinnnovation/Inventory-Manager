@@ -1,9 +1,18 @@
 import React from 'react'
-import AppLayout from './layouts/AppLayout/AppLayout'
+import { NotificationProvider } from './context/NotificationContext'
+import { AuthProvider } from './context/AuthContext'
+import AppRouter from './routers/AppRouter'
+import Toast from './components/common/Toast/Toast'
+
 
 const App = () => {
   return (
-    <AppLayout />
+    <NotificationProvider>
+      <AuthProvider>
+        <AppRouter />
+        <Toast />
+      </AuthProvider>
+    </NotificationProvider>
   )
 }
 
