@@ -1,1 +1,1 @@
-# migrations package
+# Allows Python to recognize this as a package

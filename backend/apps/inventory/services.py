@@ -91,6 +91,12 @@ def adjust_stock(
 
     # Trigger async low-stock check after the transaction commits
     from .tasks import check_low_stock  # avoid circular import at module level
-    check_low_stock.delay(product.pk)
+    try:
+        check_low_stock.delay(product.pk)
+    except Exception:
+        logger.warning(
+            'check_low_stock task could not be enqueued for product %s — broker unavailable?',
+            product.pk,
+        )
 
     return stock, movement
