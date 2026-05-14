@@ -184,7 +184,7 @@ function Catalog() {
                     <td className={styles.mono}>{item.sku}</td>
                     <td className={styles.muted}>{item.category?.name ?? '—'}</td>
                     <td className={styles.muted}>{item.unit_of_measure}</td>
-                    <td className={styles.muted}>{item.base_price ? `$${parseFloat(item.base_price).toFixed(2)}` : '—'}</td>
+                    <td className={styles.muted}>{item.base_price ? `₹${parseFloat(item.base_price).toFixed(2)}` : '—'}</td>
                     <td>
                       {item.total_quantity != null
                         ? <Badge variant={parseFloat(item.total_quantity) === 0 ? 'error' : 'success'}>{item.total_quantity}</Badge>
