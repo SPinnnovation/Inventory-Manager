@@ -1,0 +1,38 @@
+.loadingWrapper { display: flex; justify-content: center; padding: var(--space-2xl); }
+
+.wrapper {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow-x: auto;
+}
+.table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+.table th {
+  text-align: left; padding: var(--space-sm) var(--space-md);
+  color: var(--color-text-muted); font-weight: 600; font-size: var(--text-xs);
+  text-transform: uppercase; letter-spacing: .05em;
+  border-bottom: 1px solid var(--color-border); background: var(--color-bg);
+  white-space: nowrap;
+}
+.table td {
+  padding: 0.75rem var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text); vertical-align: middle;
+}
+.table tr:last-child td { border-bottom: none; }
+.table tr:hover td { background: #f8fafc; }
+
+.actionsHead { width: 80px; text-align: center; }
+.actions     { text-align: center; white-space: nowrap; display: flex; gap: 4px; justify-content: center; }
+
+.btnEdit, .btnDelete {
+  border: none; border-radius: var(--radius-sm);
+  width: 1.75rem; height: 1.75rem; cursor: pointer;
+  font-size: var(--text-sm); display: inline-flex;
+  align-items: center; justify-content: center;
+  transition: background var(--transition-fast);
+}
+.btnEdit   { background: var(--color-primary-light); color: var(--color-primary); }
+.btnEdit:hover   { background: #bfdbfe; }
+.btnDelete { background: var(--color-error-light); color: var(--color-error); }
+.btnDelete:hover { background: #fecaca; }

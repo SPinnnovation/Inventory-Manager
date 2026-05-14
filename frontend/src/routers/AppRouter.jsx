@@ -12,6 +12,14 @@ const Inventory = lazy(() => import('../pages/Inventory/Inventory.jsx'));
 const Orders = lazy(() => import('../pages/Orders/Orders.jsx'));
 const Profile = lazy(() => import('../pages/Profile/Profile.jsx'));
 const NotFound = lazy(() => import('../pages/NotFound/NotFound.jsx'));
+const Warehouses = lazy(() => import('../pages/Locations/Warehouses/Warehouses.jsx'));
+const Floors = lazy(() => import('../pages/Locations/Floors/Floors.jsx'));
+const Racks = lazy(() => import('../pages/Locations/Racks/Racks.jsx'));
+const Shelves = lazy(() => import('../pages/Locations/Shelves/Shelves.jsx'));
+const Categories = lazy(() => import('../pages/Products/Categories/Categories.jsx'));
+const Catalog = lazy(() => import('../pages/Products/Catalog/Catalog.jsx'));
+const Stock = lazy(() => import('../pages/Stock/Stock.jsx'));
+const Movements = lazy(() => import('../pages/Movements/Movements.jsx'));
 
 
 /* Redirect unauthenticated users to login page */
@@ -51,10 +59,27 @@ function AppRouter () {
                 {/* Protected — all share AppLayout */}
                 <Route path="/" element={<PrivateRoute><AppLayout /></PrivateRoute>}>
                     <Route index element={<Navigate to="/dashboard" replace />} />
-                    <Route path="dashboard" element={<Dashboard />} />
-                    <Route path="inventory" element={<Inventory />} />
+                    <Route path="dashboard" element={<Dashboard />} />                    
                     <Route path="orders" element={<Orders />} />
                     <Route path="profile" element={<Profile />} />
+
+                    <Route path="inventory">
+                        <Route index element={<Navigate to="stock" replace />} />
+
+                        {/* Location hierarchy */}
+                        <Route path="locations/warehouses" element={<Warehouses />} />
+                        <Route path="locations/floors" element={<Floors />} />
+                        <Route path="locations/racks" element={<Racks />} />
+                        <Route path="locations/shelves" element={<Shelves />} />
+
+                        {/* Product catalog */}
+                        <Route path="products" element={<Catalog />} />
+                        <Route path="products/categories" element={<Categories />} />
+
+                        {/* Stock & audit */}
+                        <Route path="stock" element={<Stock />} />
+                        <Route path="movements" element={<Movements />} />
+                    </Route>
                 </Route>
 
                 <Route path="*" element={<NotFound />} />
