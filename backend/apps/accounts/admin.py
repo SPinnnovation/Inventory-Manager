@@ -15,6 +15,14 @@ class ProfileInline(admin.StackedInline):
 class UserAdmin(BaseUserAdmin):
     inlines = (ProfileInline,)
     list_display = ("email", "first_name", "last_name", "role", "is_active", "is_staff")
+
+    def get_inline_instances(self, request, obj=None):
+        # Suppress ProfileInline on the add view — the post_save signal creates
+        # the Profile automatically. Showing the inline on add causes a duplicate
+        # insert (UNIQUE constraint violation on accounts_profiles.user_id).
+        if obj is None:
+            return []
+        return super().get_inline_instances(request, obj)
     list_filter = ("role", "is_active", "is_staff")
     search_fields = ("email", "first_name", "last_name")
     ordering = ("email",)
