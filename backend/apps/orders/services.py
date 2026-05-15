@@ -108,7 +108,12 @@ def cancel_purchase_order(po: PurchaseOrder, user) -> PurchaseOrder:
     if po.status == PurchaseOrder.OrderStatus.CANCELLED:
         raise InvalidOrderTransitionError(f'PO "{po.po_number}" is already cancelled.')
     
-    # Note: We do not allow cancelling a PO that is partially received, as that would require rolling back stock adjustments. Instead, users must manually adjust stock to correct any received items, then cancel the PO once the stock is accurate.
+    if po.status == PurchaseOrder.OrderStatus.PARTIALLY_RECEIVED:
+        raise InvalidOrderTransitionError(
+            f'Cannot cancel PO "{po.po_number}" — it is partially received. '
+            'Manually adjust stock to correct any received items, then cancel the PO once the stock is accurate.'
+        )
+
     with transaction.atomic():
         po.status = PurchaseOrder.OrderStatus.CANCELLED
         po.updated_by = user
@@ -196,7 +201,7 @@ def complete_work_order(
         if completion_status != WorkOrder.WorkOrderStatus.COMPLETED_NOT_USED:           
 
             for item in wo.items.select_related('product', 'source_location').all():
-                stock = Stock.objects.filter(
+                stock = Stock.objects.select_for_update().filter(
                     product=item.product, location=item.source_location
                 ).first()   # Check current stock for the product at the source location to determine how much can be issued against this item. We allow partial issuance, so we take the min of quantity_required and available stock.
                 
