@@ -3,54 +3,112 @@ import { createContext, useCallback, useContext, useReducer, useMemo } from "rea
 
 const NotificationContext = createContext(null);
 
-let _nextId = 0; // Internal counter to generate unique IDs for notifications
+let _nextId = 0; // Internal counter to generate unique IDs for toast notifications
+
+// ── Reducer ───────────────────────────────────────────────────────────────────
+// Manages two independent slices:
+//   notifications  — transient toast queue
+//   inboxItems     — persistent notification inbox (from DB + live WS pushes)
+
+const INBOX_CAP = 50; // Maximum number of inbox items held in memory
 
 function reducer(state, action) {
     switch (action.type) {
+        // ── Toast actions ──────────────────────────────────────────────────
         case 'ADD':
-            return { notifications: [...state.notifications, action.payload] };
+            return { ...state, notifications: [...state.notifications, action.payload] };
         case 'REMOVE':
-            return { notifications: state.notifications.filter(n => n.id !== action.payload) };
+            return { ...state, notifications: state.notifications.filter(n => n.id !== action.payload) };
+
+        // ── Inbox actions ──────────────────────────────────────────────────
+        // Replace entire inbox (used on initial API fetch)
+        case 'INBOX_SET':
+            return { ...state, inboxItems: action.payload.slice(0, INBOX_CAP) };
+
+        // Prepend a single item from a live WS push; cap at INBOX_CAP
+        case 'INBOX_PREPEND':
+            return {
+                ...state,
+                inboxItems: [action.payload, ...state.inboxItems].slice(0, INBOX_CAP),
+            };
+
+        // Mark a single notification as read by its DB id
+        case 'INBOX_MARK_READ':
+            return {
+                ...state,
+                inboxItems: state.inboxItems.map(n =>
+                    n.id === action.payload ? { ...n, is_read: true } : n
+                ),
+            };
+
+        // Mark all notifications as read
+        case 'INBOX_MARK_ALL_READ':
+            return {
+                ...state,
+                inboxItems: state.inboxItems.map(n => ({ ...n, is_read: true })),
+            };
+
         default:
             return state;
     }
-}       // Reducer function to manage the state of notifications based on dispatched actions (ADD and REMOVE)
+}
+
+// ── Provider ──────────────────────────────────────────────────────────────────
 
 export function NotificationProvider({ children }) {
-    const [state, dispatch] = useReducer(reducer, { notifications: [] }); // Initialize the reducer with an empty notifications array
+    const [state, dispatch] = useReducer(reducer, { notifications: [], inboxItems: [] });
 
-
+    // ── Toast API (unchanged) ──────────────────────────────────────────────
     const add = useCallback((message, type = 'info', duration = 4500) => {
-        const id = ++_nextId;    // Generate a unique ID for the notification
+        const id = ++_nextId;
+        dispatch({ type: 'ADD', payload: { id, message, type } });
+        if (duration > 0) setTimeout(() => dispatch({ type: 'REMOVE', payload: id }), duration);
+        return id;
+    }, []);
 
-        dispatch({ type: 'ADD', payload: { id, message, type } });  // Dispatch an action to add the new notification to the state
-
-        if (duration > 0) setTimeout(() => dispatch({ type: 'REMOVE', payload: id }), duration);    // If a duration is provided, set a timeout to remove the notification after the specified duration
-        
-        return id;  // Return the ID of the newly added notification for potential manual removal later
-    }, []); // useCallback is used to memoize the add function, ensuring it doesn't change on every render
-
-
-    const remove = useCallback((id) => dispatch({ type: 'REMOVE', payload: id }), []); // useCallback is used to memoize the remove function, ensuring it doesn't change on every render
-
+    const remove = useCallback((id) => dispatch({ type: 'REMOVE', payload: id }), []);
 
     const notify = useMemo(() => ({
         success: (msg, dur) => add(msg, 'success', dur),
-        error: (msg, dur) => add(msg, 'error', dur),
+        error:   (msg, dur) => add(msg, 'error',   dur),
         warning: (msg, dur) => add(msg, 'warning', dur),
-        info: (msg, dur) => add(msg, 'info', dur),
-    }), [add]);  // Helper functions to create notifications of specific types (success, error, warning, info) that internally call the add function with the appropriate type
+        info:    (msg, dur) => add(msg, 'info',    dur),
+    }), [add]);
+
+    // ── Inbox API ──────────────────────────────────────────────────────────
+    const setInboxItems    = useCallback((items) => dispatch({ type: 'INBOX_SET',          payload: items }), []);
+    const addInboxItem     = useCallback((item)  => dispatch({ type: 'INBOX_PREPEND',      payload: item  }), []);
+    const markReadLocal    = useCallback((id)    => dispatch({ type: 'INBOX_MARK_READ',    payload: id    }), []);
+    const markAllReadLocal = useCallback(()      => dispatch({ type: 'INBOX_MARK_ALL_READ'                }), []);
+
+    const unreadCount = useMemo(
+        () => state.inboxItems.filter(n => !n.is_read).length,
+        [state.inboxItems],
+    );
 
     return (
-        <NotificationContext.Provider value={{ notifications: state.notifications, notify, remove }}>
+        <NotificationContext.Provider value={{
+            // toast
+            notifications: state.notifications,
+            notify,
+            remove,
+            // inbox
+            inboxItems: state.inboxItems,
+            unreadCount,
+            setInboxItems,
+            addInboxItem,
+            markReadLocal,
+            markAllReadLocal,
+        }}>
             {children}
-        </NotificationContext.Provider>    
-    );  // Provide the notifications state and helper functions to the component tree via the NotificationContext
+        </NotificationContext.Provider>
+    );
 }
 
+// ── Hook ──────────────────────────────────────────────────────────────────────
 
 export function useNotificationContext() {
-    const context = useContext(NotificationContext); // Access the NotificationContext to retrieve the current notifications and helper functions
-    if (!context) throw new Error('useNotification must be used within a NotificationProvider'); // Ensure that the hook is used within a NotificationProvider
-    return context; // Return the context value, which includes the notifications and helper functions for managing them
+    const context = useContext(NotificationContext);
+    if (!context) throw new Error('useNotification must be used within a NotificationProvider');
+    return context;
 }
