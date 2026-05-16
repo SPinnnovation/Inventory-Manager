@@ -302,3 +302,22 @@ LOGGING = {
         },
     },
 }
+
+# ---------------------------------------------------------------------------
+# Celery Beat — Periodic Tasks
+# ---------------------------------------------------------------------------
+from celery.schedules import crontab  # noqa: E402
+
+CELERY_BEAT_SCHEDULE = {
+    # Invalidate the dashboard summary cache every 5 minutes so the next
+    # HTTP request re-runs the DB aggregations with fresh data.
+    'warm-dashboard-cache-every-5-min': {
+        'task': 'apps.analytics.tasks.warm_dashboard_cache',
+        'schedule': crontab(minute='*/5'),
+    },
+    # Recalculate 30-day burn rates for all products once per hour.
+    'compute-burn-rates-hourly': {
+        'task': 'apps.analytics.tasks.compute_burn_rates',
+        'schedule': crontab(minute=0),  # top of every hour
+    },
+}
