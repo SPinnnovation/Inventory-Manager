@@ -1,0 +1,111 @@
+.page    { display: flex; flex-direction: column; gap: var(--space-lg); }
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm); }
+
+.search,
+.filterSelect {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-family: inherit;
+}
+.search { min-width: 240px; }
+.search:focus, .filterSelect:focus { outline: none; border-color: var(--color-primary); }
+.filterSelect { cursor: pointer; }
+
+.toggleLabel {
+    display: flex; align-items: center; gap: var(--space-xs);
+    font-size: var(--text-sm); color: var(--color-text-muted);
+    cursor: pointer; user-select: none;
+}
+
+.card        { background: var(--color-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden; }
+.spinnerWrap { padding: var(--space-xl); display: flex; justify-content: center; }
+.tableWrapper { overflow-x: auto; }
+
+.table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+.table th {
+    text-align: left; padding: var(--space-sm) var(--space-md);
+    color: var(--color-text-muted); font-weight: 600; font-size: var(--text-xs);
+    text-transform: uppercase; letter-spacing: .05em;
+    border-bottom: 1px solid var(--color-border);
+    white-space: nowrap; background: var(--color-bg);
+}
+.table td {
+    padding: var(--space-sm) var(--space-md);
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text); vertical-align: middle;
+}
+.table tr:last-child td { border-bottom: none; }
+.table tr:hover td { background: var(--color-bg); }
+
+.orderId    { font-family: ui-monospace, monospace; font-weight: 700; color: var(--color-primary); }
+.overdueTag {
+    display: inline-block; margin-left: 6px; padding: 1px 6px;
+    border-radius: 4px; font-size: 10px; font-weight: 700;
+    text-transform: uppercase; background: #fee2e2; color: #dc2626;
+    vertical-align: middle;
+}
+.primaryText { font-weight: 500; }
+.muted   { color: var(--color-text-muted); font-size: var(--text-xs); }
+.mono    { font-family: ui-monospace, monospace; font-size: var(--text-sm); }
+.checkmark { color: #16a34a; font-weight: 700; }
+.warn    { color: #d97706; font-size: var(--text-xs); }
+
+.actionBtns { display: flex; gap: var(--space-xs); flex-wrap: nowrap; }
+
+/* Modal — meta grid */
+.metaGrid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-md); padding: var(--space-md);
+    background: var(--color-bg); border-radius: var(--radius-md);
+    margin-bottom: var(--space-lg);
+}
+@media (max-width: 640px) { .metaGrid { grid-template-columns: 1fr 1fr; } }
+
+.metaLabel {
+    display: block; font-size: var(--text-xs); font-weight: 600;
+    text-transform: uppercase; color: var(--color-text-muted); margin-bottom: 2px;
+}
+
+/* Items section header */
+.itemsSectionHeader {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: var(--space-sm);
+}
+.sectionTitle { font-size: var(--text-base); font-weight: 600; margin: 0; }
+
+/* Form layout */
+.formGrid  { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); margin-bottom: var(--space-md); }
+.formFull  { grid-column: 1 / -1; }
+.formActions {
+    display: flex; justify-content: flex-end; gap: var(--space-sm);
+    padding-top: var(--space-md); border-top: 1px solid var(--color-border);
+}
+
+/* Receive card */
+.receiveCard {
+    display: flex; flex-direction: column; gap: var(--space-xs);
+    padding: var(--space-md); background: var(--color-bg);
+    border-radius: var(--radius-md); margin-bottom: var(--space-md);
+}
+.receiveRow { display: flex; gap: var(--space-sm); align-items: baseline; font-size: var(--text-sm); }
+
+/* Readonly display */
+.readonlyField {
+    padding: var(--space-sm) var(--space-md);
+    background: var(--color-bg); border-radius: var(--radius-md);
+    font-size: var(--text-sm); color: var(--color-text);
+    border: 1px solid var(--color-border);
+}
+
+/* (all same classes as PurchaseOrders.module.css above, plus:) */
+.hint {
+    font-size: var(--text-sm); color: var(--color-text-muted);
+    margin-bottom: var(--space-md); line-height: 1.5;
+    padding: var(--space-sm) var(--space-md);
+    background: var(--color-bg); border-radius: var(--radius-md);
+    border-left: 3px solid var(--color-primary);
+}
