@@ -94,6 +94,24 @@ def receive_po_item(po_item: PurchaseOrderItem, quantity: int, user) -> Purchase
         
         po.save(update_fields=['status', 'received_at', 'updated_by', 'updated_at'])    # Save the updated PO status and timestamps
 
+    # ── Notifications (outside the atomic block so DB record exists) ──────
+    try:
+        from apps.notifications.services import create_and_push, notify_floor_managers
+        create_and_push(
+            user,
+            f'Received {quantity} × {po_item.product.sku} on {po.po_number}.',
+            'success',
+            title='PO Receipt',
+        )
+        if po.status == PurchaseOrder.OrderStatus.COMPLETED:
+            notify_floor_managers(
+                f'Purchase order {po.po_number} has been fully received and marked COMPLETED.',
+                'success',
+                title='PO Completed',
+            )
+    except Exception:
+        logger.exception('Notification dispatch failed after receive_po_item for %s', po.po_number)
+
     return po_item
 
 
@@ -168,6 +186,19 @@ def issue_work_order(wo: WorkOrder, user) -> WorkOrder:
             
         wo.updated_by = user    # Update the WO's updated_by field to the current user
         wo.save(update_fields=['status', 'updated_by', 'updated_at'])   # Save the updated WO status and timestamps
+
+    # ── Notifications (outside the atomic block so DB record exists) ──────
+    if insufficient:
+        try:
+            from apps.notifications.services import notify_floor_managers
+            sku_list = ', '.join(insufficient)
+            notify_floor_managers(
+                f'Work order {wo.wo_number} is blocked — insufficient stock for: {sku_list}.',
+                'warning',
+                title='Work Order Blocked',
+            )
+        except Exception:
+            logger.exception('Notification dispatch failed after issue_work_order for %s', wo.wo_number)
 
     return wo   # Return the updated work order instance with the new status
 

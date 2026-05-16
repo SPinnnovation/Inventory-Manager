@@ -27,8 +27,17 @@ def check_low_stock(self, product_id):
             logger.warning(
                 "Low stock alert for product %s (ID: %d): total quantity %.4f at or below reorder point %.4f.",
                 product.name, product.id, total, product.reorder_point
-            )   # Log a warning message indicating that the stock level for the product is low, including the product name, ID, total quantity, and reorder point   
-            # TODO: dispatch notification when notifications app is built
+            )   # Log a warning message indicating that the stock level for the product is low, including the product name, ID, total quantity, and reorder point
+            try:
+                from apps.notifications.services import notify_floor_managers
+                notify_floor_managers(
+                    f'Low stock: {product.name} (SKU: {product.sku}) — '
+                    f'{total} units remaining (reorder point: {product.reorder_point}).',
+                    'warning',
+                    title='Low Stock Alert',
+                )
+            except Exception:
+                logger.exception('Notification dispatch failed in check_low_stock for product %d', product_id)
             
     except Product.DoesNotExist:
         logger.error("Product with ID %d does not exist. Cannot check low stock.", product_id) # Log an error if the product with the given ID does not exist
