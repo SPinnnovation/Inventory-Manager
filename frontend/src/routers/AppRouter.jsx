@@ -10,6 +10,8 @@ const Register = lazy(() => import('../pages/Register/Register.jsx'));
 const Dashboard = lazy(() => import('../pages/Dashboard/Dashboard.jsx'));
 const Inventory = lazy(() => import('../pages/Inventory/Inventory.jsx'));
 const Orders = lazy(() => import('../pages/Orders/Orders.jsx'));
+const PurchaseOrders = lazy(() => import('../pages/Orders/PurchaseOrders.jsx'));
+const WorkOrders = lazy(() => import('../pages/Orders/WorkOrders.jsx'));
 const Profile = lazy(() => import('../pages/Profile/Profile.jsx'));
 const NotFound = lazy(() => import('../pages/NotFound/NotFound.jsx'));
 const Warehouses = lazy(() => import('../pages/Locations/Warehouses/Warehouses.jsx'));
@@ -63,6 +65,14 @@ function AppRouter () {
                     <Route path="orders" element={<Orders />} />
                     <Route path="profile" element={<Profile />} />
 
+                    {/* Orders */}
+                    <Route path="orders">
+                        <Route index element={<Orders />} />
+                        <Route path="purchase-orders" element={<PurchaseOrders />} />
+                        <Route path="work-orders" element={<WorkOrders />} />
+                    </Route>
+
+                    {/* Inventory */}
                     <Route path="inventory">
                         <Route index element={<Navigate to="stock" replace />} />
 

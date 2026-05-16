@@ -16,6 +16,11 @@ const PRODUCT_LINKS = [
   { to: '/inventory/products/categories', label: 'Categories' },
 ];
 
+const ORDERS_LINKS = [
+    { to: '/orders/purchase-orders', label: 'Purchase Orders' },
+    { to: '/orders/work-orders', label: 'Work Orders' },
+];
+
 function NavGroup({ icon, label, basePath, children }) {
   const location = useLocation(); // Used for auto-opening when navigating to a child route, but not for active styling (that's handled by NavLink in SubLink)
   const isActive = location.pathname.startsWith(basePath); // Consider active if we're anywhere in the section, not just on the exact path of the NavGroup
@@ -93,19 +98,13 @@ const Sidebar = () => {
             {PRODUCT_LINKS.map(l => <SubLink key={l.to} to={l.to} label={l.label} />)}
 
             <SubSection label="Operations" />
-            <SubLink to="/inventory/stock"     label="Stock" />
+            <SubLink to="/inventory/stock" label="Stock" />
             <SubLink to="/inventory/movements" label="Movements" />
           </NavGroup>
 
-          <li>
-            <NavLink
-              to="/orders"
-              className={({ isActive }) => `${styles.navLink} ${isActive ? styles.active : ''}`}
-            >
-              <span className={styles.icon} aria-hidden="true">◫</span>
-              <span>Orders</span>
-            </NavLink>
-          </li>
+          <NavGroup icon="◫" label="Orders" basePath="/orders">
+            {ORDERS_LINKS.map(l => <SubLink key={l.to} to={l.to} label={l.label} />)}
+          </NavGroup>
 
           <li>
             <NavLink

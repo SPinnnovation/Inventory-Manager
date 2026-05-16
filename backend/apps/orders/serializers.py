@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from apps.inventory.models import Product, Shelf
+from apps.accounts.models import User
 from .models import PurchaseOrder, PurchaseOrderItem, WorkOrder, WorkOrderItem
 
 # ---------------------------------------------------------------------------
@@ -26,6 +27,10 @@ class _UserMinimalSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(read_only=True)
     first_name = serializers.CharField(read_only=True)
     last_name = serializers.CharField(read_only=True)
+    
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'first_name', 'last_name']
     
     
 
