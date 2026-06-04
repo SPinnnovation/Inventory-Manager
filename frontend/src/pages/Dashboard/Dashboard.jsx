@@ -92,7 +92,7 @@ const Dashboard = () => {
         setSummary(data);
         setLiveEvents((data.recent_movements || []).slice(0, 20));
       })
-      .catch(err => notify(err.message || 'Failed to load dashboard', 'error'))
+      .catch(err => notify.error(err.message || 'Failed to load dashboard'))
       .finally(() => setLoading(false));
   }, []);
 
