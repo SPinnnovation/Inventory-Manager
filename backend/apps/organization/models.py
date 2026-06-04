@@ -61,3 +61,19 @@ class Position(TimeStampedModel):
         HR_SPECIALIST = 60, "HR Specialist"
 
     name = models.CharField(max_length=255)
+    code = models.SlugField(max_length=60, unique=True, db_index=True)
+    level = models.IntegerField(choices=Level.choices, default=Level.TEAM_MEMBER, db_index=True)
+    description = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = "Position"
+        verbose_name_plural = "Positions"
+        ordering = ("-level", "name")
+        indexes = [
+            models.Index(fields=["code",]),
+            models.Index(fields=["level",]),
+        ] # Indexing for better performance on filtering and sorting
+
+    def __str__(self):
+        return self.name

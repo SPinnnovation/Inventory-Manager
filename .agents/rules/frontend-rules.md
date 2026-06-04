@@ -9,6 +9,7 @@ trigger: always_on
 * **Language:** JavaScript (ES6+).
 * **Routing:** React Router v6+.
 * **State Management:** React Context API for global state (Auth, Notifications, UI Themes). Local state via `useState` and `useReducer`.
+* **Tenant Context:** The authenticated user payload must include organization/tenant identity. Frontend state must preserve the active organization, role, memberships, and capabilities returned by the backend.
 
 ## 2. Component Architecture
 * Follow a strict functional component pattern using React Hooks.
@@ -59,6 +60,7 @@ import styles from './ComponentName.module.css';
 
 ## 4. API & WebSocket Integration
 * Backend using session authentication, so ensure that all API calls include credentials (e.g., `withCredentials: true` in Axios).
+* Tenant ownership is server-enforced. Frontend services must not send arbitrary `organization_id` to claim ownership of records; only use organization identifiers for filters or workspace selection when the backend explicitly supports it.
 * All API interactions must be centralized in a `services/` directory with clear, descriptive method names that indicate their purpose (e.g., `getProducts`, `createOrder`, `updateStock`). This promotes separation of concerns and makes it easier to maintain and update API calls as the backend evolves.
 * Use Axios for HTTP requests. Centralize API calls in a `services/` directory.
 * Handle Websocket connections (for notifications/live analytics) gracefully. Implement auto-reconnect logic.
@@ -105,6 +107,19 @@ const useWebSocket = (url, onMessage) => {
 export default useWebSocket;
 ```
 
+## 4.1 Login, Tenant Context, And Layout Redirection
+* The frontend Login page remains the same.
+* After successful session authentication, `AuthContext` must call the backend current-user endpoint and store the user's organization, role, memberships, and capabilities.
+* Route guards must redirect users based on backend-provided role/capabilities:
+    - Admin users -> Admin layout.
+    - Managers -> Manager layout or department-specific manager workspace.
+    - Team Leads -> Team Lead layout.
+    - Team Members -> Team Member/work layout.
+    - HR, Finance, IT, Manufacturing, Storage, Logistics, Marketing, Sales users -> the most specific permitted layout.
+* If a user has multiple memberships, the app must select a safe default active organization/department/team and allow workspace switching only when the backend grants access.
+* Frontend code must not rely on local role strings alone for authorization. The backend remains the source of truth.
+* Admin user-management screens may create Manager accounts for the current organization. Manager user-management screens may create Team Lead and Team Member accounts only inside the returned permitted scopes.
+
 ## 5. Coding Standards
 * No inline styles unless dynamically calculated.
 * Avoid prop drilling; use Context for deeply nested state.
@@ -129,6 +144,8 @@ export default useWebSocket;
 
 ## 8. Security
 * Ensure that all API calls include credentials for session authentication and that CSRF tokens are properly handled to prevent cross-site request forgery attacks.
+* Treat organization isolation as a security boundary. Never cache or reuse another user's organization-scoped data after logout, workspace switch, or session expiry.
+* Never display generated temporary credentials except in the intended credential delivery/creation flow. Temporary passwords must not be stored in browser storage, logged to console, or sent over WebSockets.
 * Implement input validation on all forms to prevent injection attacks and ensure data integrity. This includes validating user input on the frontend before sending it to the backend, providing immediate feedback to users when their input does not meet the required criteria.
 * Use HTTPS for all API calls and WebSocket connections to ensure that data is transmitted securely between the frontend and backend, protecting sensitive information from being intercepted by malicious actors.
 * Regularly review and update dependencies to address any security vulnerabilities in third-party libraries used in the application, ensuring that the frontend remains secure against known threats and exploits.

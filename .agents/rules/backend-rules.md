@@ -8,6 +8,7 @@ trigger: always_on
 * **Framework:** Django & Django REST Framework (DRF). 
 * **ORM:** Use Django's ORM for all database interactions. Raw SQL is prohibited unless absolutely necessary for performance reasons, and must be reviewed by a senior developer.
 * **Authentication & Authorization:** Use Django's built-in authentication system with strict session-based authentication. Implement role-based access control (RBAC) to restrict access to sensitive operations based on user roles and permissions.
+* **Multi-Tenancy:** The platform uses a shared PostgreSQL database with strict tenant isolation by `organization.Organization`. Tenant-owned data must never leak across organizations.
 * **Database:** PostgreSQL.
 * **Cache/Broker:** Redis (for caching, Celery broker, and Channels channel layer).
 * **Asynchronous Tasks:** Celery for background processing (e.g., predictive price calculations, email notifications).
@@ -16,10 +17,12 @@ trigger: always_on
 
 ## 2. API Design & Authentication
 * **Authentication:** Strict Session-based authentication. Do not use JWT unless explicitly required for a mobile client later. Ensure CSRF validation is active.
+* **Tenant Context:** Every authenticated request must resolve the user's active `Organization`. Tenant-owned querysets must be filtered by this organization before serialization.
 * **API Versioning:** Use URL-based versioning (e.g., `/api/v1/`) to allow for future iterations without breaking existing clients.
 * **Rate Limiting:** Implement rate limiting (e.g., 1000 requests per user per day) to prevent abuse and ensure fair usage of the API.
 * **Error Handling:** All API responses must follow a consistent structure, including a status code, a message, and any relevant data or error details. Use appropriate HTTP status codes for different scenarios (e.g., 200 for success, 400 for client errors, 500 for server errors).
 * **Input Validation:** Use DRF serializers to validate all incoming data. Ensure that all required fields are present and that data types are correct. Reject any requests with invalid data and provide clear error messages.
+* **Tenant Ownership Validation:** Never trust client-submitted `organization_id` for ownership. The backend must derive organization from the authenticated user or trusted parent records and must reject cross-organization relations.
 * **Pagination:** Implement pagination for list endpoints to prevent performance issues with large datasets. Use a reasonable default page size (e.g., 20 items per page) and allow clients to specify a custom page size within limits (e.g., max 100 items per page).
 * **Filtering & Sorting:** Implement filtering and sorting capabilities for list endpoints to allow clients to easily find relevant data. Use query parameters for filtering (e.g., `?status=active`) and sorting (e.g., `?ordering=-created_at`).
 * **Viewsets & Routers:** Use DRF viewsets and routers to simplify URL routing and reduce boilerplate code. This promotes a consistent structure across the API and makes it easier to maintain.
@@ -43,10 +46,14 @@ trigger: always_on
 * **Filters:**  Every Viewset uses `FilterSet` subclass in the app's `filters.py` to define allowed filters for list endpoints, ensuring consistent and secure filtering across the API. This promotes a clear separation of concerns and makes it easier to maintain and update filtering logic as needed.
 * **Serializers:** Every ViewSet has a corresponding Serializer in the app's `serializers.py` that defines the expected input and output data structure, ensuring clear API contracts and facilitating validation. Serializers should include field-level validation to enforce data integrity and provide clear error messages for invalid input.
 * **Permissions:** Every ViewSet defines `permission_classes` to enforce access control based on user roles and permissions, ensuring that only authorized users can perform sensitive operations. Permissions should be granular and specific to the actions being performed (e.g., only users with the "inventory_manager" role can issue Work Orders).
+* **Credential Provisioning:** Organization Admin users create Manager accounts for their own organization and trigger secure temporary credential emails through the backend email/Celery flow. Managers create Team Lead and Team Member credentials only inside their permitted organization/department/team scope.
 * **Pagination:** Every list endpoint in the API implements pagination using a consistent `pagination_class`, ensuring efficient handling of large datasets and improving performance. Pagination should include metadata in the response (e.g., total count, next/previous page links) to facilitate client-side navigation through paginated results. 
 
 
 ## 3. Database & ORM Guardrails
+* **Tenant Root:** Add `organization` foreign keys to tenant-owned models directly when practical. If a model derives tenant ownership through a parent relation, services and querysets must enforce the tenant path consistently.
+* **Tenant Indexing:** Tenant-owned models must index `organization` and common tenant+status/date combinations.
+* **Tenant Unique Constraints:** Business identifiers such as codes, order numbers, team codes, SKU namespaces, and report numbers should include `organization` in unique constraints unless explicitly intended to be globally unique.
 * **Data Integrity:** You MUST use `transaction.atomic()` for any operation that modifies inventory (e.g., executing a Work Order or receiving a Purchase Order).
 * **Query Optimization:** Prevent N+1 queries by strictly enforcing the use of `select_related` and `prefetch_related` in serializers and views.
 * Avoid heavy calculations in synchronous views.
@@ -58,7 +65,9 @@ trigger: always_on
 
 ## 4. Asynchronous Processing (Celery & WebSockets)
 * **Celery:** Offload predictive price calculations, email notifications, and heavy analytics generation to Celery asynchronous tasks.
+* **Credential Email Tasks:** Temporary credential emails for Admin-created Managers and Manager-created Team Leads/Team Members should be dispatched asynchronously via Celery where available. Generated credentials must never be logged.
 * **WebSockets:** Use Django Channels for real-time notifications (e.g., critical stock alerts, PO status changes).
+* **Tenant WebSocket Groups:** WebSocket group names and authorization must include organization context, e.g. `org_<id>_user_<id>`, `org_<id>_team_<id>`, `org_<id>_department_<id>`.
 
 
 ## 5. Code Structure
@@ -69,6 +78,7 @@ trigger: always_on
 
 
 ## 6. App Structure
+* **Organization App:** Contains tenant `Organization`, departments, positions, teams, memberships, team lead assignments, and reporting lines.
 * **Inventory App:** Contains models, serializers, viewsets, and tasks related to inventory management (e.g., `Product`, `Stock`, `StockMovement`).
 * **Orders App:** Contains models, serializers, viewsets, and tasks related to order management (e.g., `PurchaseOrder`, `WorkOrder`).
 * **Analytics App:** Contains models, serializers, viewsets, and tasks related to analytics and predictive pricing (e.g., `PredictivePrice`, `BurnRate`).
@@ -78,5 +88,6 @@ trigger: always_on
 
 - All Django Apps must be located under `backend/apps/` to maintain a clear and organized project structure. Each app should have its own `models.py`, `serializers.py`, `views.py`, `services.py`, `filters.py`, and `tasks.py` (if applicable) to encapsulate related functionality and promote separation of concerns. This structure facilitates easier maintenance, scalability, and collaboration among developers working on different aspects of the application.
 - Accounts app should handle all user-related functionality, including authentication, profile management, and permissions. This centralizes user management and allows for consistent handling of authentication and authorization across the entire application.
+- Accounts must link users to their tenant organization. The role hierarchy is `Organization -> Admin User -> Managers -> Team Leads -> Team Members`, with Admin as the top role inside a single tenant organization.
 - The Inventory app should focus on managing products, stock levels, and stock movements, while the Orders app should handle the creation and processing of purchase orders and work orders. This separation allows for clearer organization of business logic and makes it easier to maintain and extend each domain independently.
 - The Analytics app should be responsible for all data analysis and predictive pricing logic, while the Notifications app should manage the creation and delivery of notifications to users. This separation ensures that each app can evolve independently and allows for better scalability as the application grows.

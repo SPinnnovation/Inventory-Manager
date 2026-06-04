@@ -4,6 +4,15 @@ trigger: always_on
 
 # Business Logic Agent - Inventory Management
 
+## 0. Multi-Tenant Business Boundary
+* **Organization:** The top-level tenant and business boundary for the Industrial Production ERP.
+* **Hierarchy:** Organization -> Admin User -> Managers -> Team Leads -> Team Members.
+* **Role Scope:** Admin is the top role inside a single Organization. Manager, Team Lead, Team Member, HR, Finance, IT, Manufacturing, Storage, Logistics, Marketing, and Sales users remain scoped to their Organization.
+* *Constraint:* Tenant-owned records must belong to exactly one Organization, either directly or through a required parent.
+* *Constraint:* No operation may mix Products, Stock, Locations, Purchase Orders, Work Orders, Teams, Reports, HR Cases, Finance records, or Manufacturing jobs from different Organizations.
+* *Constraint:* Backend services must derive Organization from the authenticated user or trusted parent objects. Client-provided organization ownership must never be trusted.
+* *Constraint:* Analytics, notifications, audit logs, and WebSocket activity must be partitioned by Organization.
+* *Constraint:* Organization Admin users create Manager accounts. Managers create Team Lead and Team Member accounts only within their permitted Organization/Department/Team scope.
 
 ## 1. Inventory Hierarchy
 * **Warehouse Assembly:** Inventory is physically mapped via a 3-tier hierarchy: Floor -> Rack -> Shelf for each warehouse.  
@@ -20,6 +29,7 @@ trigger: always_on
 * *Constraint:* The system must support concurrent updates to Stock quantities, ensuring data integrity through appropriate locking or transactional mechanisms to prevent race conditions and ensure accurate inventory levels.
 * *Constraint:* The system must validate that all referenced Products and Locations exist before processing any Stock Movements, Purchase Orders, or Work Orders to prevent orphaned records and maintain data integrity.
 * *Constraint: * Stock can have multiple warehouses, but each Stock entry must be associated with exactly one Product and one Location. This ensures clear tracking of inventory across the system.
+* *Constraint:* Warehouses, Floors, Racks, Shelves, Products, Stock, and Stock Movements must be Organization-scoped. Cross-Organization Stock Movements are prohibited.
 
 ## 2. Order Management Integration
 * **Purchase Orders (PO):** Represents inbound inventory.
@@ -34,6 +44,7 @@ trigger: always_on
 * *Constraint:* The system must support partial receipts for Purchase Orders, allowing users to receive a portion of the ordered quantity while keeping the remaining quantity open until fully received. This should be reflected accurately in the Stock quantities and order status.
 * *Constraint:* The system must support partial fulfillment for Work Orders, allowing users to issue a portion of the required quantity while keeping the remaining quantity pending until fully issued. This should be reflected accurately in the Stock quantities and order status.
 * *Constraint:* The system must validate that all referenced Products and Locations exist before processing any Purchase Orders or Work Orders to prevent orphaned records and maintain data integrity.
+* *Constraint:* Purchase Orders, Work Orders, and their line items must belong to the same Organization as their Products, Locations, creator, updater, and related Stock Movements.
 
 ## 3. Predictive Pricing & Analytics
 * The system tracks `price_bought` and `market_price`.
@@ -43,3 +54,11 @@ trigger: always_on
 ## 4. Notification System
 * Critical changes (e.g., Stock falling below a threshold, WO issued without sufficient stock, PO received) trigger an internal event. Job status changes (e.g., Job Incomplete due to insufficient stock, Job Completed with Partial Products Issued) also trigger events.
 * This event is pushed to the frontend in real-time via WebSockets to alert active users.
+* Notifications must be sent only to users inside the same Organization as the triggering event. WebSocket group names and authorization must include Organization context.
+
+## 5. Credential And Login Flow
+* The frontend Login page remains unchanged.
+* Organization Admin users create Manager accounts and trigger secure credential delivery by email.
+* Managers handle credentials for Team Leads and Team Members within their permitted scope.
+* Generated passwords are temporary and must require password change on first login.
+* Credential creation, resend, revoke, activation, deactivation, and first-login password change must be audited.

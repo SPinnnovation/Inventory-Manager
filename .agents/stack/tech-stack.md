@@ -5,7 +5,9 @@ trigger: always_on
 # Detailed Tech Stack
 
 ## Platform Overview
-The Home Inventory Management System is a web-based application designed to help users manage their household inventory efficiently. It provides features for tracking products, managing stock levels, processing purchase orders and work orders, and receiving real-time notifications about inventory changes.
+The platform is being upgraded from a Home Inventory Management System into a multi-tenant Industrial Production ERP. It is a web-based application for multiple tenant Organizations that need isolated inventory, production, reporting, finance, logistics, marketing, HR, IT, and analytics workflows.
+
+The tenancy model is a shared PostgreSQL database with strict data isolation by `organization.Organization`. Each Organization has its own Admin user hierarchy, departments, teams, users, inventory, orders, reports, notifications, and analytics.
 
 ## Frontend
 * **Build Tool:** Vite
@@ -14,6 +16,7 @@ The Home Inventory Management System is a web-based application designed to help
 * **Styling:** CSS Modules (`.module.css`)
 * **State/API:** React Context, Axios
 * **Real-time:** Native WebSocket API
+* **Tenant UX:** Existing Login page, followed by role/capability-based layout redirection using organization-aware auth state
 
 ## Backend
 * **Language:** Python 3.x
@@ -24,6 +27,9 @@ The Home Inventory Management System is a web-based application designed to help
 * **ORM:** Django ORM
 * **Authentication:** Django's built-in Session Authentication
 * **Admin Interface:** Django Admin Panel
+* **Tenant Root:** `organization.Organization`
+* **Tenant Isolation:** Organization-scoped querysets, services, permissions, WebSocket groups, and analytics summaries
+* **Credential Delivery:** Backend-generated temporary credentials sent by email, preferably through Celery
 
 ## Data & Infrastructure
 * **Primary Database:** PostgreSQL

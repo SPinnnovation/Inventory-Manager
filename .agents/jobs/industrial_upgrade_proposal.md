@@ -1,6 +1,6 @@
 # Industrial Production ERP: Upgrade Proposal & Agent Coordination Contract
 
-This document defines the target architecture and phased upgrade plan for evolving the current Home Inventory System into a full-scale Industrial Production ERP for a tech manufacturing business focused on IoT automation, embedded modules, drone technology, and industrial automation.
+This document defines the target architecture and phased upgrade plan for evolving the current Home Inventory System into a multi-tenant, full-scale Industrial Production ERP for tech manufacturing businesses focused on IoT automation, embedded modules, drone technology, and industrial automation.
 
 AI agents must use this proposal as a synchronization contract before implementing upgrade work. Any implementation must preserve existing inventory/order invariants while expanding the system into a production-grade, auditable, permission-aware industrial platform.
 
@@ -46,11 +46,38 @@ Primary operational domains:
 - IT: Handles all the software related task for IOT Automation, Software development and any other IT related operation.
 - Administration: controls organization structure, permissions, targets, analytics, and cross-department command.
 
+### 1.1. Multi-Tenancy Blueprint
+
+The upgraded platform must support multiple independent industrial organizations in a shared application while preserving strict tenant data isolation.
+
+Tenant model:
+
+- `Organization` is the tenant root.
+- Every tenant-owned model must link to `Organization` either directly or through a required parent that links to `Organization`.
+- Tenant-owned examples include users, departments, teams, warehouses, floors, racks, shelves, products, stock, stock movements, orders, reports, HR cases, notifications, analytics summaries, manufacturing jobs, finance records, sales records, logistics records, and marketing records.
+- Global reference data is allowed only when it is intentionally shared and read-only, such as default capability definitions or system role templates.
+
+Tenant hierarchy:
+
+- `Organization -> Admin User -> Managers -> Team Leads -> Team Members`.
+- Each organization must have at least one active Admin user.
+- Admin users are scoped to their organization unless explicitly marked as platform support users by a separate, highly restricted system role.
+- Managers, Team Leads, Team Members, HR, Finance, Marketing, Storage, Logistics, Manufacturing, and IT users stay within the same organization boundary.
+
+Isolation requirements:
+
+- All querysets for tenant-owned models must be filtered by the authenticated user's `organization_id`.
+- API clients must never be trusted to provide tenant ownership for writes; the backend must derive organization from the authenticated actor or an approved parent object.
+- Unique constraints for tenant-owned business codes should include `organization` unless the value must be globally unique.
+- No stock, order, report, HR case, notification, WebSocket group, or analytics result may cross organization boundaries.
+- Cross-tenant administration is not part of normal organization Admin behavior and must be treated as platform-superuser functionality only.
+
 ## 2. Non-Negotiable Engineering Guardrails
 
 All AI agents must follow these rules during the upgrade:
 
 - Keep all Django apps under `backend/apps/`.
+- Enforce tenant isolation for all tenant-owned models and querysets.
 - Use DRF serializers for validation.
 - Use DRF viewsets and routers for standard CRUD.
 - Use custom `@action` methods for state transitions such as issue, receive, approve, complete, escalate, delegate.
@@ -71,12 +98,34 @@ All AI agents must follow these rules during the upgrade:
 
 ## 3. Backend Architecture Upgrades
 
+### 3.0. Multi-Tenant Organization Root
+
+The `organization` app must introduce an `Organization` model as the tenant root before deeper department/team workflows are expanded.
+
+Core model:
+
+- `Organization`
+  - stores legal/display name, code/slug, status, contact email, phone, address, timezone, created/updated timestamps.
+  - owns one or more Admin users.
+  - owns departments, teams, inventory, orders, reports, HR records, notifications, analytics, and production data.
+
+Required behavior:
+
+- Organization creation must also create or assign the first Admin user.
+- Tenant-owned records must not exist without a tenant path.
+- Tenant-owned services must validate that all referenced objects belong to the same organization.
+- Tenant-owned models should define `organization` directly when practical; deep child models may derive tenant ownership through required parent relations only if services and querysets enforce it consistently.
+- Admin user actions are organization-scoped by default.
+
 ### 3.1. Organization, Departments, Teams, And Reporting Lines
 
 Create a new `organization` app.
 
 Core models:
 
+- `Organization`
+  - tenant root for one industrial company/business unit.
+  - owns Admin users and every tenant-owned operational record.
 - `Department`
   - examples: Manufacturing, Logistics, Storage, Finance, Marketing, HR.
   - stores name, code, description, active state.
@@ -97,11 +146,13 @@ Core models:
 
 Required behavior:
 
+- Organization Admins create managers inside their own organization.
 - Admins can create departments and assign managers.
 - Managers can create teams in their department if permitted.
 - Managers can assign team leads.
 - Team leads can manage team members if permitted.
 - A user may belong to multiple teams, but each operational action must resolve to one active team/department context.
+- Managers, Team Leads, and Team Members must never be assigned across organizations.
 
 ### 3.2. Capability-Based Permissions
 
@@ -136,12 +187,13 @@ Core models:
 Required behavior:
 
 - Permissions flow top to bottom.
-- Admins can grant manager capabilities.
+- Organization Admins can grant manager capabilities inside their organization.
 - Managers can grant a subset of their own capabilities to team leads.
 - Team leads can grant a subset of their own capabilities to team members.
 - A user cannot delegate a capability they do not hold.
 - A delegated permission cannot exceed the grantor's scope.
 - Every permission change must be auditable.
+- Capability scopes must include tenant ownership; organization scope is the upper bound for normal users.
 
 ### 3.3. Audit And Operational Logging
 
@@ -368,6 +420,23 @@ Required behavior:
 - Failure to push WebSocket must never roll back core business transaction.
 - Critical events should include audit link/reference id.
 
+### 3.10. Tenant Credential Provisioning Flow
+
+Credential creation is top-down and must stay inside one organization.
+
+Required flow:
+
+- Organization Admin creates Manager accounts for their organization.
+- The system generates a secure temporary password and sends the username/email plus temporary credential to the Manager through the configured email backend.
+- Credential email dispatch must run through Celery when available and must be audited.
+- Managers create and distribute credentials for Team Leads and Team Members within their own organization.
+- Managers may only create users within departments/teams they are permitted to manage.
+- Team Leads may receive delegated user-management capability only if the Manager grants it explicitly.
+- All generated credentials are temporary and must force password change on first login.
+- Temporary credentials must never be logged, stored in plaintext, exposed in API responses, or sent over WebSocket.
+- Credential creation, resend, revoke, activation, and deactivation must write audit events.
+- Existing frontend login remains unchanged: users authenticate through the same login page, then the application redirects to the correct layout based on role, capabilities, and tenant membership.
+
 ## 4. Frontend Architecture Upgrades
 
 ### 4.1. Capability-Driven Layout System
@@ -409,6 +478,7 @@ Implementation direction:
 Auth context should eventually expose:
 
 - current user.
+- organization / tenant.
 - memberships.
 - active department.
 - active team.
@@ -473,6 +543,22 @@ Required future page groups:
 - Error boundaries should wrap major module areas.
 - Dynamic notifications should support ARIA live regions.
 
+### 4.5. Login And Role-Based Layout Redirection
+
+The frontend login page remains the same.
+
+Required behavior:
+
+- Users authenticate with the existing session-auth login flow.
+- After `auth/me` returns the authenticated user, organization, role, memberships, and capabilities, the router redirects to the appropriate layout.
+- Admin users land in `AdminLayout`.
+- Managers land in `ManagerLayout` or their department-specific manager workspace.
+- Team Leads land in `TeamLeadLayout`.
+- Team Members land in `TeamMemberLayout` / `/work`.
+- HR, Finance, IT, Marketing, Storage, Logistics, and Manufacturing specialized users land in the most specific layout permitted by their capabilities.
+- If a user has multiple memberships, the app must choose a safe default active organization/department/team and allow permitted workspace switching.
+- The frontend must not trust local role values alone; backend session state and capabilities remain the source of truth.
+
 ## 5. Phase-by-Phase Implementation Plan
 
 ### Phase 1: Foundation, Organization, Permissions, And Audit
@@ -481,6 +567,7 @@ Primary goal: establish the control plane before adding large business modules.
 
 Backend:
 
+- Add `Organization` tenant root model.
 - Add `organization` app.
 - Add capability-based permission system.
 - Add audit framework.
@@ -491,6 +578,10 @@ Backend:
   - Storage/Floor Manager.
   - Staff.
   - Viewer.
+- Add organization-scoped credential provisioning rules:
+  - Admin creates Managers.
+  - Managers create Team Leads and Team Members where permitted.
+  - temporary credentials are emailed and force password change.
 
 Frontend:
 
@@ -498,11 +589,16 @@ Frontend:
 - Update sidebar/navigation to derive links from capabilities.
 - Add initial admin organization console.
 - Add workspace context for active department/team.
+- Keep the existing login screen and redirect users to layouts based on authenticated role/capabilities.
 
 Acceptance gates:
 
 - Existing login/session auth still works.
+- Authenticated user payload includes organization identity and scoped capabilities.
 - Existing dashboard/inventory/orders remain accessible to permitted users.
+- Tenant-owned APIs cannot read/write another organization's records.
+- Admin can create Manager credentials only for their own organization.
+- Manager can create Team Lead/Team Member credentials only inside permitted scope.
 - Permission grant/revoke is audited.
 - User cannot access route or API without required capability.
 - `npm run build` passes.
@@ -732,6 +828,10 @@ Each app should include these files when applicable:
 
 Every important workflow should use explicit service functions:
 
+- `create_organization`
+- `create_organization_admin`
+- `create_manager_credentials`
+- `create_team_user_credentials`
 - `grant_capability`
 - `revoke_capability`
 - `create_issue_report`
@@ -748,6 +848,7 @@ Every important workflow should use explicit service functions:
 
 Each service must:
 
+- validate tenant ownership.
 - validate actor permissions.
 - validate object state.
 - run inside `transaction.atomic()` if it writes critical state.
@@ -760,10 +861,12 @@ Each service must:
 WebSocket consumers must:
 
 - authenticate via session.
+- bind every connection to the user's organization.
 - join only authorized groups.
 - validate any inbound payloads.
 - never expose private HR or finance information to broad groups.
 - separate personal notifications from department/team broadcasts.
+- include organization id in group naming or group authorization strategy so tenant events cannot collide.
 - degrade gracefully when Redis/Channels is unavailable.
 
 ### 7.3. Analytics Contract
@@ -772,6 +875,7 @@ Analytics must:
 
 - use cached/read-model summaries for heavy dashboards.
 - run expensive aggregation through Celery.
+- partition summaries by organization.
 - scope data by capability and active department/team.
 - allow drilldown from KPI to source records.
 - never calculate sensitive finance or salary information in the browser.
@@ -836,6 +940,7 @@ To truly elevate the software to a cutting-edge Tech Manufacturing standard, con
 
 Before implementing any upgrade task, an AI agent must verify:
 
+- Which organization/tenant owns the data.
 - Which phase the task belongs to.
 - Which app owns the model/service/API.
 - Which existing invariant must be preserved.

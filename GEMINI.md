@@ -47,6 +47,7 @@
 ### Infrastructure
 | Concern | Technology |
 |---|---|
+| Multi-Tenancy | Shared PostgreSQL database with strict tenant isolation by `Organization` |
 | Primary Database | PostgreSQL |
 | Cache & Broker | Redis |
 | File Storage | Local filesystem or AWS S3 (Product Images) |
@@ -100,7 +101,7 @@ backend/
 │   │   ├── services.py
 │   │   ├── filters.py
 │   │   └── tasks.py
-│   ├── organization/    # Departments, Positions, Teams, Memberships, Reporting lines
+│   ├── organization/    # Tenant Organizations, Departments, Positions, Teams, Memberships, Reporting lines
 │   │   ├── models.py
 │   │   ├── serializers.py
 │   │   ├── views.py
@@ -334,6 +335,17 @@ backend/
 - Each app contains: `models.py`, `serializers.py`, `views.py`, `services.py`, `filters.py`, and `tasks.py` (where applicable).
 - **Fat models / thin views / dedicated services.** Complex business logic and transactional flows belong in `services.py` or models. Cross-model operations belong exclusively in `services.py`.
 
+### 5.1.1 Multi-Tenancy Model
+- The platform uses a **shared database with tenant isolation** model.
+- `organization.Organization` is the tenant root.
+- Every tenant-owned model must include a direct `organization` foreign key or have a mandatory parent relation that resolves to exactly one `Organization`.
+- Tenant-owned examples include users, departments, teams, warehouses, shelves, products, stock, orders, reports, HR cases, notifications, manufacturing jobs, finance records, marketing records, logistics records, sales records, and analytics summaries.
+- Global reference models are allowed only when intentionally shared, read-only, and safe across tenants, such as default capability definitions.
+- Querysets for tenant-owned models must be filtered by `request.user.organization` or by the authenticated user's active tenant context.
+- The backend must derive tenant ownership from the authenticated user or trusted parent objects. Never trust client-submitted `organization_id` for ownership assignment.
+- Tenant-specific unique business identifiers must include `organization` in their uniqueness constraints unless they are intentionally globally unique.
+- Services must validate that all related objects in one operation belong to the same organization.
+
 ### 5.2 API Design
 - API versioning via URL prefix: `/api/v1/`.
 - Use **DRF ViewSets and Routers** for all standard CRUD operations.
@@ -353,6 +365,7 @@ backend/
 - Rate limiting: implement per-user throttling (e.g., 1000 requests/user/day).
 - Default page size: 20 items. Maximum client-requested page size: 100 items.
 - All list responses must include pagination metadata (total count, next/previous links).
+- All tenant-owned API responses must be scoped to the authenticated user's organization. Cross-tenant records must return `404` or `403` without revealing private details.
 
 ### 5.3 Serializers
 - Every ViewSet has a corresponding Serializer in the app's `serializers.py`.
@@ -369,8 +382,9 @@ backend/
 - Prevent N+1 queries: always use `select_related()` and `prefetch_related()` in serializers and views.
 - Use Django model constraints (`UniqueConstraint`, `CheckConstraint`) to enforce integrity at the DB level.
 - All schema changes via **Django migrations only**. Manual DB modifications are strictly prohibited.
-- Create database indexes on frequently queried fields: `Product.sku`, `Stock.product_id`, `Order.status`, `AuditEvent.timestamp`, `IssueReport.status`, `HRToken.token`.
+- Create database indexes on frequently queried fields: `Organization.code`, `User.organization_id`, `Product.sku`, `Stock.product_id`, `Order.status`, `AuditEvent.timestamp`, `IssueReport.status`, `HRToken.token`.
 - Use `clean()` / `clean_fields()` for model-level business rule validation.
+- Tenant-owned models must index `organization` and common tenant+status/date query combinations.
 
 ### 5.6 Celery Tasks
 - All tasks defined in `tasks.py` within the relevant app.
@@ -385,17 +399,30 @@ backend/
 - Include request correlation IDs via middleware to trace logs across services.
 - Use Django's built-in logging framework.
 - **Never log sensitive information** (passwords, session tokens, PII, HR message details).
+- Audit events for tenant-owned records must include organization identity either directly or in metadata.
 
 ### 5.8 Django Channels (WebSocket)
 - WebSocket consumers live in the relevant app's `consumers.py`.
 - All consumers must validate the user's session cookie on connection; reject unauthenticated connections immediately.
 - Messages sent over WebSockets must be validated and sanitized before processing or rendering.
-- Push messages strictly to authorized Channel Groups: `user_<id>`, `team_<id>`, `department_<id>`, `role_admin`, `hr_queue`, `report_<id>`.
+- Push messages strictly to authorized Channel Groups: `org_<id>_user_<id>`, `org_<id>_team_<id>`, `org_<id>_department_<id>`, `org_<id>_role_admin`, `org_<id>_hr_queue`, `org_<id>_report_<id>`.
+- WebSocket connection setup must bind the user to their organization and must never subscribe a user to groups from another organization.
 
 ### 5.9 Capability-Based Access Control
 - Access control must use granular capabilities (e.g., `inventory.stock.adjust`, `hr.case.delegate`) instead of generic user roles.
 - Granular capability checks must check for Scope: Global, Department-scoped, Team-scoped, Location-scoped, or Object-scoped.
 - Permissions flow top-to-bottom: Superior user can grant a subset of their capabilities to subordinates. Grants and revocations must write audit events.
+- Capability scopes cannot exceed the user's organization. Normal organization Admin users are not platform-wide superusers.
+
+### 5.9.1 Credential Provisioning
+- Organization Admin users create Manager accounts for their own organization.
+- Admin-created Manager credentials are generated by the backend and delivered through the configured email backend, preferably via Celery.
+- Managers create and distribute credentials for Team Leads and Team Members inside departments/teams they are authorized to manage.
+- Team Leads can manage credentials only if explicitly delegated that capability by a Manager.
+- Generated passwords are temporary and must force password change on first login.
+- Temporary passwords must never be logged, stored in plaintext, returned in API responses, included in audit JSON, or sent over WebSockets.
+- Credential creation, resend, revoke, activation, deactivation, and first-login password change must be audited.
+- The frontend login page remains the same. After login, users are redirected to layouts based on authenticated role, organization, memberships, and capabilities.
 
 ### 5.10 Bottom-to-Top Reporting and Escalation Flow
 - Implement bottom-to-top issue routing: Team Member reports to Team Lead &rarr; Lead reports/escalates to Manager &rarr; Manager reports/escalates to Admin.
@@ -410,6 +437,14 @@ backend/
 ---
 
 ## 6. Business Logic Rules
+
+### 6.0 Tenant Business Boundary
+- `Organization` is the top-level tenant and business boundary.
+- Normal users operate inside exactly one active organization context at a time.
+- The hierarchy is `Organization -> Admin User -> Managers -> Team Leads -> Team Members`.
+- Inventory, orders, reports, HR cases, manufacturing jobs, finance records, logistics records, marketing records, sales records, notifications, and analytics are organization-owned.
+- No operation may combine stock, users, departments, teams, orders, reports, or finance records from different organizations.
+- Every bottom-to-top report and top-to-bottom permission grant must remain within one organization.
 
 ### 6.1 Inventory Hierarchy
 ```
@@ -431,6 +466,7 @@ Warehouse
 - All Stock Movements must carry an immutable audit log entry: timestamp, user, reason.
 - All operations modifying stock must support **concurrent updates** safely (see Security §7.2) using database row-level locking (`select_for_update`) and atomic transactions.
 - Referenced Products and Locations must be validated to exist before processing any Stock Movement, PO, or WO.
+- Referenced Products, Locations, Stock, POs, and WOs must belong to the same organization before any inventory transaction runs.
 
 ### 6.3 Purchase Order (PO) Flow
 ```
@@ -490,6 +526,8 @@ The following events trigger a real-time WebSocket notification to active, autho
 - Implement **account lockout** after repeated failed login attempts (e.g., via `django-axes`).
 - Enforce strong password policies (minimum length, complexity).
 - Consider MFA for users with elevated permissions (Admins, Floor Managers).
+- Session-authenticated users must carry organization context in the authenticated user payload returned by `auth/me`.
+- Login remains a single frontend page; post-login routing selects Admin, Manager, Team Lead, Team Member, HR, Finance, IT, Manufacturing, Storage, Logistics, Marketing, Sales, or Analytics layouts based on backend-provided role/capabilities.
 
 ### 7.2 Concurrency & Race Conditions
 - **All stock modifications** (Stock In / Stock Out) must execute inside `transaction.atomic()`.
@@ -502,6 +540,7 @@ The following events trigger a real-time WebSocket notification to active, autho
 - Only **Admins** and **Floor Managers** can approve POs or WOs.
 - Sensitive operations (modifying stock, issuing work orders) require explicit permission checks and must be logged.
 - Define granular `permission_classes` on every ViewSet action.
+- Organization Admin is the top role inside one tenant organization. Other user roles stay the same and remain tenant-scoped.
 
 ### 7.4 Data Validation & Sanitization
 - Validate all incoming data strictly via **DRF Serializers**. No exceptions.
@@ -521,6 +560,7 @@ The following events trigger a real-time WebSocket notification to active, autho
 - Regularly review and update dependencies to patch known CVEs.
 - Do not log sensitive data (passwords, tokens, PII).
 - All security-sensitive operations (stock modifications, order approvals) must produce an immutable audit log entry.
+- Tenant isolation is a security boundary. Any cross-organization data leak is a critical security defect.
 
 ---
 
@@ -584,6 +624,8 @@ All API responses must follow a consistent structure:
 ## 11. What the Agent Must NEVER Do
 
 - Generate or suggest JWT authentication (unless explicitly approved).
+- Build tenant-owned models, serializers, viewsets, services, filters, WebSockets, or analytics without organization scoping.
+- Trust a client-submitted `organization_id` to decide record ownership.
 - Use raw SQL without explicit senior-developer approval in context.
 - Write inline styles in React components (unless value is dynamically computed).
 - Place components, services, or hooks outside their designated feature subdirectory.
@@ -593,6 +635,7 @@ All API responses must follow a consistent structure:
 - Process a Stock Movement, PO, or WO without validating that referenced Products and Locations exist.
 - Modify stock outside of a `transaction.atomic()` block.
 - Log sensitive information (passwords, tokens, PII).
+- Log generated credentials or send generated credentials over WebSockets.
 - Expose raw error messages or stack traces to the frontend user.
 - Push to shared branches, drop tables, or perform destructive operations without explicit human confirmation.
 - Leave TODOs, stubs, or unfinished placeholder code in committed files.
