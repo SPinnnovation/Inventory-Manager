@@ -1,5 +1,5 @@
 # GEMINI AI Agent — Complete Rules, Regulations & Guidelines
-# Home Inventory Management System
+# Industrial Production ERP
 
 > This file is the single source of truth for the Gemini AI Agent operating on this project.
 > All rules defined here are **mandatory and non-negotiable** unless explicitly overridden by a human developer.
@@ -8,7 +8,7 @@
 
 ## 0. Agent Behaviour Contract
 
-- You are a **code-generation and reasoning agent** for a Home Inventory Management System.
+- You are a **code-generation and reasoning agent** for an Industrial Production ERP.
 - You must **always read and respect** all rules in this file before generating any code, making suggestions, or modifying files.
 - When in doubt, **ask** rather than assume. Never silently skip a rule.
 - **Never** generate placeholder, stub, or TODO code and leave it unfinished unless explicitly instructed.
@@ -77,14 +77,14 @@ frontend/src/
 │       ├── ComponentName.jsx
 │       └── styles/
 │           └── ComponentName.module.css
-├── context/             # React Context providers (AuthContext.js, NotificationContext.js)
+├── context/             # React Context providers (AuthContext.js, WorkspaceContext.js, NotificationContext.js)
 ├── hooks/               # Custom React Hooks (useAuth.js, useWebSocket.js)
-├── layouts/             # Layout components (Header.jsx, Footer.jsx, Sidebar.jsx)
-├── pages/               # Page-level components (Dashboard, Inventory, Orders)
+├── layouts/             # Capability-driven layouts (AdminLayout, ManagerLayout, TeamLeadLayout, TeamMemberLayout, HRLayout, FinanceLayout)
+├── pages/               # Page-level components grouped by capability layout (Admin, Manager, TeamLead, Work, HR, Manufacturing, Storage, Logistics, Finance, Marketing, Sales, Analytics)
 │   └── <Feature>/
 │       └── PageName.jsx
 ├── router/              # AppRouter.jsx
-├── services/            # API service files (api.js, inventoryService.js)
+├── services/            # API service files (api.js, inventoryService.js, reportingService.js, hrService.js, manufacturingService.js)
 ├── styles/              # globals.css (CSS variables: colors, fonts, spacing)
 └── utils/               # Utility/helper functions
 ```
@@ -93,40 +93,106 @@ frontend/src/
 ```
 backend/
 ├── apps/
-│   ├── accounts/        # User auth, profiles, permissions
+│   ├── accounts/        # User authentication, profiles
 │   │   ├── models.py
 │   │   ├── serializers.py
 │   │   ├── views.py
 │   │   ├── services.py
 │   │   ├── filters.py
 │   │   └── tasks.py
-│   ├── inventory/       # Products, Stock, StockMovement, Locations
+│   ├── organization/    # Departments, Positions, Teams, Memberships, Reporting lines
 │   │   ├── models.py
 │   │   ├── serializers.py
 │   │   ├── views.py
 │   │   ├── services.py
 │   │   ├── filters.py
 │   │   └── tasks.py
-│   ├── orders/          # PurchaseOrder, WorkOrder, OrderItem, WorkOrderItem
+│   ├── permissions/     # Capability-based permission system, capability grants, scopes, delegations
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── views.py
+│   │   ├── services.py
+│   │   └── filters.py
+│   ├── audit/           # Centralized audit logging, state transitions, request correlation
+│   │   ├── models.py
+│   │   ├── middleware.py
+│   │   ├── views.py
+│   │   ├── services.py
+│   │   └── filters.py
+│   ├── notifications/   # WebSocket consumers, notification preferences and triggers
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── views.py
+│   │   ├── services.py
+│   │   └── consumers.py
+│   ├── reports/         # Bottom-to-top issue reports, comments, SLA tracking
 │   │   ├── models.py
 │   │   ├── serializers.py
 │   │   ├── views.py
 │   │   ├── services.py
 │   │   ├── filters.py
 │   │   └── tasks.py
-│   ├── analytics/       # PredictivePrice, BurnRate, dashboards
+│   ├── hr/              # Secure HR tokens, cases, delegations, case logs
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── views.py
+│   │   ├── services.py
+│   │   └── filters.py
+│   ├── inventory/       # Product classifications, stock tracking, reservations, locations
 │   │   ├── models.py
 │   │   ├── serializers.py
 │   │   ├── views.py
 │   │   ├── services.py
 │   │   ├── filters.py
 │   │   └── tasks.py
-│   └── notifications/   # StockAlert, Notification, WebSocket consumers
+│   ├── manufacturing/   # Bills of Materials (BOM), Production plans, jobs, quality checkpoints, scrap
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── views.py
+│   │   ├── services.py
+│   │   ├── filters.py
+│   │   └── tasks.py
+│   ├── procurement/     # Suppliers, RFQs, purchase approvals, PO finance status
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── views.py
+│   │   ├── services.py
+│   │   └── filters.py
+│   ├── orders/          # Compatibility facade for legacy PO/WO orders
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── views.py
+│   │   └── services.py
+│   ├── sales/           # B2B customers, Sales orders, eCommerce ingestion
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── views.py
+│   │   ├── services.py
+│   │   └── filters.py
+│   ├── logistics/       # Packing, dispatch, carriers, delivery tracking
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── views.py
+│   │   ├── services.py
+│   │   └── filters.py
+│   ├── finance/         # Budgets, cost centers, payment records, ledgers, approval chains
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── views.py
+│   │   ├── services.py
+│   │   └── filters.py
+│   ├── marketing/       # Campaigns, budget tracking, channel metrics
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── views.py
+│   │   ├── services.py
+│   │   └── filters.py
+│   └── analytics/       # Predictive pricing, burn rates, cross-role cached summaries
 │       ├── models.py
 │       ├── serializers.py
 │       ├── views.py
 │       ├── services.py
-│       └── consumers.py
+│       └── tasks.py
 ├── core/
 │   ├── settings/        # base.py, development.py, production.py
 │   ├── celery.py        # Celery app + Celery beat periodic tasks
@@ -264,10 +330,9 @@ backend/
 
 ### 5.1 Framework & App Structure
 - All Django apps reside under `backend/apps/`.
-- Apps: `accounts`, `inventory`, `orders`, `analytics`, `notifications`.
+- Apps: `accounts`, `organization`, `permissions`, `audit`, `notifications`, `reports`, `hr`, `inventory`, `manufacturing`, `procurement`, `orders`, `sales`, `logistics`, `finance`, `marketing`, `analytics`.
 - Each app contains: `models.py`, `serializers.py`, `views.py`, `services.py`, `filters.py`, and `tasks.py` (where applicable).
-- **Fat models / thin views.** Business logic belongs in models or `services.py`.
-- Cross-model, transactional logic belongs exclusively in `services.py`.
+- **Fat models / thin views / dedicated services.** Complex business logic and transactional flows belong in `services.py` or models. Cross-model operations belong exclusively in `services.py`.
 
 ### 5.2 API Design
 - API versioning via URL prefix: `/api/v1/`.
@@ -278,7 +343,7 @@ backend/
   class ProductViewSet(viewsets.ModelViewSet):
       queryset = Product.objects.all()
       serializer_class = ProductSerializer
-      permission_classes = [IsAuthenticated, IsInventoryManager]
+      permission_classes = [IsAuthenticated, HasCapabilityPermission] # Custom capability check
       filter_backends = [DjangoFilterBackend, OrderingFilter, SearchFilter]
       filterset_class = ProductFilter
       pagination_class = StandardResultsPagination
@@ -304,7 +369,7 @@ backend/
 - Prevent N+1 queries: always use `select_related()` and `prefetch_related()` in serializers and views.
 - Use Django model constraints (`UniqueConstraint`, `CheckConstraint`) to enforce integrity at the DB level.
 - All schema changes via **Django migrations only**. Manual DB modifications are strictly prohibited.
-- Create database indexes on frequently queried fields: `Product.sku`, `Stock.product_id`, `Order.status`.
+- Create database indexes on frequently queried fields: `Product.sku`, `Stock.product_id`, `Order.status`, `AuditEvent.timestamp`, `IssueReport.status`, `HRToken.token`.
 - Use `clean()` / `clean_fields()` for model-level business rule validation.
 
 ### 5.6 Celery Tasks
@@ -314,15 +379,33 @@ backend/
 - **Never call `.delay()` inside a Celery task.** Use Celery's native chaining/scheduling primitives instead.
 - Periodic tasks registered in `core/celery.py` via Celery beat with clear scheduling intervals.
 
-### 5.7 Logging
+### 5.7 Logging & Audit Trails
 - Log all critical operations: stock movements, order status changes, user authentication events.
+- Centralized audit events must be written using the `AuditEvent` model from the `audit` app.
+- Include request correlation IDs via middleware to trace logs across services.
 - Use Django's built-in logging framework.
-- **Never log sensitive information** (passwords, session tokens, PII).
+- **Never log sensitive information** (passwords, session tokens, PII, HR message details).
 
 ### 5.8 Django Channels (WebSocket)
 - WebSocket consumers live in the relevant app's `consumers.py`.
 - All consumers must validate the user's session cookie on connection; reject unauthenticated connections immediately.
 - Messages sent over WebSockets must be validated and sanitized before processing or rendering.
+- Push messages strictly to authorized Channel Groups: `user_<id>`, `team_<id>`, `department_<id>`, `role_admin`, `hr_queue`, `report_<id>`.
+
+### 5.9 Capability-Based Access Control
+- Access control must use granular capabilities (e.g., `inventory.stock.adjust`, `hr.case.delegate`) instead of generic user roles.
+- Granular capability checks must check for Scope: Global, Department-scoped, Team-scoped, Location-scoped, or Object-scoped.
+- Permissions flow top-to-bottom: Superior user can grant a subset of their capabilities to subordinates. Grants and revocations must write audit events.
+
+### 5.10 Bottom-to-Top Reporting and Escalation Flow
+- Implement bottom-to-top issue routing: Team Member reports to Team Lead &rarr; Lead reports/escalates to Manager &rarr; Manager reports/escalates to Admin.
+- Escalations must record full history in the `IssueReport` status logs.
+- Trigger real-time WebSocket notifications upon creation or escalation to notify only the responsible actors.
+
+### 5.11 HR Token & Case Privacy
+- Submitting HR issues generates an immutable `HRToken` returned to the submitter.
+- HR case files and comments must be strictly access-controlled and visible only to the submitter and authorized HR personnel holding the required HR capabilities.
+- Delegating HR cases to other leads/managers requires recorded reasons and duration-bound capability scopes.
 
 ---
 
@@ -336,15 +419,17 @@ Warehouse
               └── Shelf  (= Location)
                     └── Stock  (Product × Location)
 ```
-- A **Product** is the item definition: SKU, image, base price, predictive price, market price.
-- **Stock** is the physical instantiation of a Product at a specific Location.
-- A single Product can have multiple Stock entries across different Locations.
-- A Stock entry is associated with exactly **one Product** and **one Location**.
+- A **Product** defines an item class, including SKU, image, base price, predictive price, and market price.
+- **Stock** represents the physical presence of a specific Product at a specific Shelf Location.
+- A Product may be stocked at multiple Locations, but each Stock record maps to exactly **one Product** and **one Location**.
+- Product Classifications: `RAW_MATERIAL`, `MODULE`, `FINAL_PRODUCT`, `CONSUMABLE`, `TOOL`, `EQUIPMENT`.
+- Inventory Stock States: `AVAILABLE`, `RESERVED`, `ISSUED`, `WIP`, `QUARANTINE`, `REJECTED`, `SCRAP`, `RETURNED`.
 
 ### 6.2 Inventory Constraints
 - Stock quantity **must never be negative**. Any operation that would result in negative stock must be rejected with a clear error message.
+- Stock reservations must be released, consumed, or expired explicitly. They cannot be bypassed.
 - All Stock Movements must carry an immutable audit log entry: timestamp, user, reason.
-- All operations modifying stock must support **concurrent updates** safely (see Security §7.2).
+- All operations modifying stock must support **concurrent updates** safely (see Security §7.2) using database row-level locking (`select_for_update`) and atomic transactions.
 - Referenced Products and Locations must be validated to exist before processing any Stock Movement, PO, or WO.
 
 ### 6.3 Purchase Order (PO) Flow
@@ -354,6 +439,7 @@ Issued → Received / Completed
 - **Issued:** PO is created and sent to the supplier.
 - **Received / Completed:** Upon marking as Received, the system **atomically increments** Stock quantities at the designated Locations.
 - **Partial receipt** is supported: a portion of the ordered quantity can be received, keeping the PO open until fully received. Stock and PO status must reflect this accurately.
+- Connects directly with the `procurement` and `finance` workflows for invoice validation.
 
 ### 6.4 Work Order (WO) Flow
 ```
@@ -367,6 +453,7 @@ Issued → Pending  (insufficient stock)
   | All products fully used | `Job Completed — Products Fully Used` |
   | Products partially used | `Job Completed — Products Partially Used` (remaining appended to WO) |
   | No products used | `Job Completed — Products Not Used` (remaining appended to WO) |
+  | Products used | `Job Completed — Products Used` |
   | Insufficient stock, job incomplete | `Job Pending — Insufficient Stock` (warning issued) |
 - **Partial fulfillment** is supported: issue a portion of required quantity; remainder stays pending.
 - A WO **cannot** be issued if required stock is not available. Reject with a clear error message.
@@ -375,6 +462,7 @@ Issued → Pending  (insufficient stock)
 - Track `price_bought` (cost) and `market_price` for each Product.
 - A **Celery background task** analyzes historical `market_price` data to compute and update `predictive_price`.
 - Analytics dashboards aggregate Stock Movements over time to project **burn rates** and alert on upcoming shortages.
+- Analytics aggregations must use Celery for periodic compilation and cache results using Redis to avoid synchronous DB queries.
 
 ### 6.6 Notification Triggers
 The following events trigger a real-time WebSocket notification to active, authorized users:
@@ -382,6 +470,14 @@ The following events trigger a real-time WebSocket notification to active, autho
 - WO issued without sufficient stock (Pending state).
 - PO received (stock incremented).
 - WO job status changes (Completed, Partially Used, Pending, Insufficient Stock).
+- Issue reports are created or escalated.
+- Budget approval status changes.
+
+### 6.7 Manufacturing & BOM Invariants
+- A **Bill of Materials (BOM)** defines the recipe for Modules and Final Products.
+- BOM item validation must prevent circular dependencies (e.g., a product cannot require itself as a component).
+- Manufacturing jobs must explode the BOM to determine raw material requirements, reserve stock in the `inventory` app, and log all scrap/reworks with explicit reasons.
+- Completed modules or products can only transition to available inventory after passing a Quality Control checkpoint signed off by a QA-capable user.
 
 ---
 
@@ -500,3 +596,7 @@ All API responses must follow a consistent structure:
 - Expose raw error messages or stack traces to the frontend user.
 - Push to shared branches, drop tables, or perform destructive operations without explicit human confirmation.
 - Leave TODOs, stubs, or unfinished placeholder code in committed files.
+- Bypass capability permission checks in viewsets or action handlers.
+- Allow circular dependencies in Bills of Materials (BOM) or recursive assembly loops.
+- Expose confidential HR case summaries, comments, or attachments to users without direct HR capabilities.
+- Perform critical state modifications (such as changing production job status, issue reports, or budget approvals) without recording a structured audit log event.
