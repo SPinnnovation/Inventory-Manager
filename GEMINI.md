@@ -79,8 +79,8 @@ frontend/src/
 │           └── ComponentName.module.css
 ├── context/             # React Context providers (AuthContext.js, WorkspaceContext.js, NotificationContext.js)
 ├── hooks/               # Custom React Hooks (useAuth.js, useWebSocket.js)
-├── layouts/             # Capability-driven layouts (AdminLayout, ManagerLayout, TeamLeadLayout, TeamMemberLayout, HRLayout, FinanceLayout)
-├── pages/               # Page-level components grouped by capability layout (Admin, Manager, TeamLead, Work, HR, Manufacturing, Storage, Logistics, Finance, Marketing, Sales, Analytics)
+├── layouts/             # Capability-driven layouts (AdminLayout, ManagerLayout, TeamLeadLayout, TeamMemberLayout, HRLayout, FinanceLayout, ITLayout)
+├── pages/               # Page-level components grouped by capability layout (Admin, Manager, TeamLead, Work, HR, IT, Manufacturing, Storage, Logistics, Finance, Marketing, Sales, Analytics)
 │   └── <Feature>/
 │       └── PageName.jsx
 ├── router/              # AppRouter.jsx
@@ -330,7 +330,7 @@ backend/
 
 ### 5.1 Framework & App Structure
 - All Django apps reside under `backend/apps/`.
-- Apps: `accounts`, `organization`, `permissions`, `audit`, `notifications`, `reports`, `hr`, `inventory`, `manufacturing`, `procurement`, `orders`, `sales`, `logistics`, `finance`, `marketing`, `analytics`.
+- Apps: `accounts`, `organization`, `permissions`, `audit`, `notifications`, `reports`, `hr`, `it`, `inventory`, `manufacturing`, `procurement`, `orders`, `sales`, `logistics`, `finance`, `marketing`, `analytics`.
 - Each app contains: `models.py`, `serializers.py`, `views.py`, `services.py`, `filters.py`, and `tasks.py` (where applicable).
 - **Fat models / thin views / dedicated services.** Complex business logic and transactional flows belong in `services.py` or models. Cross-model operations belong exclusively in `services.py`.
 

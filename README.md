@@ -2,7 +2,7 @@
 
 Welcome to the **Industrial Production ERP**! Originally developed as a Home Inventory Management System, this application is being systematically upgraded into a high-concurrency, auditable, and role-scoped ERP designed to manage a full-scale industrial tech manufacturing warehouse.
 
-The platform tracks products from raw materials to final assemblies (e.g., IoT devices, drone components), manages departments (Manufacturing, Storage, Logistics, Finance, Marketing, HR, Administration), enforces capability-based access control, tracks bottom-to-top issue reports with live notifications, and processes bills of materials (BOMs) with full traceability.
+The platform tracks products from raw materials to final assemblies (e.g., IoT devices, drone components), manages departments (Manufacturing, Storage, Logistics, Finance, Marketing, HR, IT, Administration), enforces capability-based access control, tracks bottom-to-top issue reports with live notifications, and processes bills of materials (BOMs) with full traceability.
 
 ---
 
@@ -142,6 +142,7 @@ graph TD
     MgrFin[Finance Manager]
     MgrMkt[Marketing Manager]
     MgrHR[HR Manager]
+    MgrIT[IT Manager]
     
     %% Admin assigns Managers
     Admin -->|Assigns| MgrMfg
@@ -150,6 +151,7 @@ graph TD
     Admin -->|Assigns| MgrFin
     Admin -->|Assigns| MgrMkt
     Admin -->|Assigns| MgrHR
+    Admin -->|Assigns| MgrIT
     
     %% Teams & Team Leads
     TL1[Team Lead A]
@@ -201,6 +203,7 @@ graph TD
     MgrFin -.->|Reports to| Admin
     MgrMkt -.->|Reports to| Admin
     MgrHR -.->|Reports to| Admin
+    MgrIT -.->|Reports to| Admin
     
     classDef admin fill:#f96,stroke:#333,stroke-width:2px;
     classDef manager fill:#9cf,stroke:#333,stroke-width:2px;
@@ -209,7 +212,7 @@ graph TD
     classDef team fill:#eee,stroke:#333,stroke-width:1px,stroke-dasharray: 5 5;
     
     class Admin admin;
-    class MgrMfg,MgrStor,MgrLog,MgrFin,MgrMkt,MgrHR manager;
+    class MgrMfg,MgrStor,MgrLog,MgrFin,MgrMkt,MgrHR,MgrIT manager;
     class TL1,TL2,TL3 lead;
     class Mem1,Mem2,Mem3,Mem4 member;
     class Team1,Team2,Team3,Team4 team;

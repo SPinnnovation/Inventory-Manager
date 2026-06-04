@@ -43,6 +43,7 @@ Primary operational domains:
 - Finance: controls budgets, approvals, purchase/payment tracking, salary hooks, cost centers, and ledgers.
 - Marketing/Sales: controls B2B sales, ecommerce sales, campaign budgets, lead/customer records, and sales orders.
 - Human Resources: handles employee issue tokens, HR cases, delegation, resolution, and admin reporting.
+- IT: Handles all the software related task for IOT Automation, Software development and any other IT related operation.
 - Administration: controls organization structure, permissions, targets, analytics, and cross-department command.
 
 ## 2. Non-Negotiable Engineering Guardrails
@@ -387,6 +388,8 @@ Recommended layout structure:
   - HR token search, case queue, delegation matrix, admin report preparation.
 - `FinanceLayout`
   - budget approvals, payment queues, cost-center views, spend analytics.
+- `ITLayout`
+  - handles software deployment, IoT automation tasks, software tasks, system configurations, and developer team management.
 
 Implementation direction:
 
@@ -435,6 +438,8 @@ Required future page groups:
   - member assigned tasks, progress reports, issue submission.
 - `/hr`
   - token submission, case tracking, HR case board.
+- `/it`
+  - software tasks, IoT deployments, configs, team management.
 - `/manufacturing`
   - BOMs, plans, jobs, operations, QA checkpoints.
 - `/storage`
@@ -694,6 +699,7 @@ Target backend app list:
 - `notifications`
 - `reports`
 - `hr`
+- `it`
 - `inventory`
 - `manufacturing`
 - `procurement`
