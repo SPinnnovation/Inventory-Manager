@@ -7,6 +7,7 @@ import useNotification from '../../hooks/useNotification.js';
 import Badge from '../../components/common/Badge/Badge.jsx';
 import LoadingSpinner from '../../components/common/LoadingSpinner/LoadingSpinner.jsx';
 import { formatDate } from '../../utils/formatters';
+import { getWebSocketUrl } from '../../utils/websocket';
 import styles from './styles/Dashboard.module.css';
 
 // ── Constants ─────────────────────────────────────────────────────────────
@@ -98,20 +99,7 @@ const Dashboard = () => {
 
   // ── WebSocket live feed ────────────────────────────────────────────────
   useEffect(() => {
-    const apiBase = import.meta.env.VITE_API_BASE_URL || '';
-    let wsOrigin;
-    if (apiBase.startsWith('http://') || apiBase.startsWith('https://')) {
-      wsOrigin = apiBase
-        .replace(/^https:\/\//, 'wss://')
-        .replace(/^http:\/\//, 'ws://')
-        .replace(/\/api\/v1\/?$/, '');
-    } else {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      wsOrigin = `${protocol}//${window.location.host}`;
-    }
-    const wsUrl = `${wsOrigin}/ws/analytics/activity/`;
-
-    const ws = new WebSocket(wsUrl);
+    const ws = new WebSocket(getWebSocketUrl('/ws/analytics/activity/'));
 
     wsRef.current = ws;
 

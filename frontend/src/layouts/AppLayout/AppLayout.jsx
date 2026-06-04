@@ -7,21 +7,7 @@ import useAuth from '../../hooks/useAuth';
 import useWebSocket from '../../hooks/useWebSocket';
 import { useNotificationContext } from '../../context/NotificationContext';
 import notificationService from '../../services/notificationService';
-
-// Derive the WebSocket base URL from the Vite API base URL:
-//   strip the /api/v1 suffix, then replace http(s):// with ws(s)://.
-//   If VITE_API_BASE_URL is relative, fallback to window.location to construct an absolute WebSocket URL.
-function getWsBase() {
-    const apiBase = import.meta.env.VITE_API_BASE_URL || '';
-    if (apiBase.startsWith('http://') || apiBase.startsWith('https://')) {
-        return apiBase
-            .replace(/\/api\/v1\/?$/, '')
-            .replace(/^https/, 'wss')
-            .replace(/^http/, 'ws');
-    }
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    return `${protocol}//${window.location.host}`;
-}
+import { getWebSocketUrl } from '../../utils/websocket';
 
 
 function AppLayout() {
@@ -48,7 +34,7 @@ function AppLayout() {
         [notify, addInboxItem],
     );
 
-    const wsUrl = user ? `${getWsBase()}/ws/notifications/` : null;
+    const wsUrl = user ? getWebSocketUrl('/ws/notifications/') : null;
     useWebSocket({ url: wsUrl, onMessage: handleMessage, enabled: !!user });
 
     return (
