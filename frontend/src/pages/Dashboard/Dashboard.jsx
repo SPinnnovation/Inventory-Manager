@@ -99,13 +99,20 @@ const Dashboard = () => {
   // ── WebSocket live feed ────────────────────────────────────────────────
   useEffect(() => {
     const apiBase = import.meta.env.VITE_API_BASE_URL || '';
-    const wsOrigin = apiBase
-      .replace(/^https:\/\//, 'wss://')
-      .replace(/^http:\/\//, 'ws://')
-      .replace(/\/api\/v1\/?$/, '');
+    let wsOrigin;
+    if (apiBase.startsWith('http://') || apiBase.startsWith('https://')) {
+      wsOrigin = apiBase
+        .replace(/^https:\/\//, 'wss://')
+        .replace(/^http:\/\//, 'ws://')
+        .replace(/\/api\/v1\/?$/, '');
+    } else {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      wsOrigin = `${protocol}//${window.location.host}`;
+    }
     const wsUrl = `${wsOrigin}/ws/analytics/activity/`;
 
     const ws = new WebSocket(wsUrl);
+
     wsRef.current = ws;
 
     ws.onopen    = () => setWsOnline(true);

@@ -9,14 +9,20 @@ import { useNotificationContext } from '../../context/NotificationContext';
 import notificationService from '../../services/notificationService';
 
 // Derive the WebSocket base URL from the Vite API base URL:
-//   strip the /api/v1 suffix, then replace http(s):// with ws(s)://
+//   strip the /api/v1 suffix, then replace http(s):// with ws(s)://.
+//   If VITE_API_BASE_URL is relative, fallback to window.location to construct an absolute WebSocket URL.
 function getWsBase() {
-    const base = (import.meta.env.VITE_API_BASE_URL || '')
-        .replace(/\/api\/v1\/?$/, '')
-        .replace(/^https/, 'wss')
-        .replace(/^http/, 'ws');
-    return base;
+    const apiBase = import.meta.env.VITE_API_BASE_URL || '';
+    if (apiBase.startsWith('http://') || apiBase.startsWith('https://')) {
+        return apiBase
+            .replace(/\/api\/v1\/?$/, '')
+            .replace(/^https/, 'wss')
+            .replace(/^http/, 'ws');
+    }
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    return `${protocol}//${window.location.host}`;
 }
+
 
 function AppLayout() {
     const { user } = useAuth();
