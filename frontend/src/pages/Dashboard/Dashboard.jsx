@@ -4,6 +4,7 @@ import { LineChart, Line, ResponsiveContainer, Tooltip } from 'recharts';
 
 import analyticsService from '../../services/analyticsService';
 import useNotification from '../../hooks/useNotification.js';
+import useWebSocket from '../../hooks/useWebSocket.js';
 import Badge from '../../components/common/Badge/Badge.jsx';
 import LoadingSpinner from '../../components/common/LoadingSpinner/LoadingSpinner.jsx';
 import { formatDate } from '../../utils/formatters';
@@ -98,37 +99,28 @@ const Dashboard = () => {
   }, []);
 
   // ── WebSocket live feed ────────────────────────────────────────────────
-  useEffect(() => {
-    const ws = new WebSocket(getWebSocketUrl('/ws/analytics/activity/'));
-
-    wsRef.current = ws;
-
-    ws.onopen    = () => setWsOnline(true);
-    ws.onclose   = () => setWsOnline(false);
-    ws.onerror   = () => setWsOnline(false);
-    ws.onmessage = (e) => {
-      try {
-        const data = JSON.parse(e.data);
-        setLiveEvents(prev => [
-          {
-            product_name:     data.product_name,
-            product_sku:      data.product_sku,
-            location:         data.location,
-            quantity_changed: data.quantity_changed,
-            movement_type:    data.movement_type,
-            reference_id:     data.reference_id,
-            user_email:       data.user_email,
-            timestamp:        data.timestamp,
-          },
-          ...prev.slice(0, 19),
-        ]);
-      } catch {
-        // ignore malformed frames
-      }
-    };
-
-    return () => ws.close();
+  const handleMessage = React.useCallback((data) => {
+    setLiveEvents(prev => [
+      {
+        product_name:     data.product_name,
+        product_sku:      data.product_sku,
+        location:         data.location,
+        quantity_changed: data.quantity_changed,
+        movement_type:    data.movement_type,
+        reference_id:     data.reference_id,
+        user_email:       data.user_email,
+        timestamp:        data.timestamp,
+      },
+      ...prev.slice(0, 19),
+    ]);
   }, []);
+
+  const wsUrl = getWebSocketUrl('/ws/analytics/activity/');
+  const { status: wsStatus } = useWebSocket({ url: wsUrl, onMessage: handleMessage, enabled: !loading });
+  
+  useEffect(() => {
+    setWsOnline(wsStatus === 'connected');
+  }, [wsStatus]);
 
   // ── Render ─────────────────────────────────────────────────────────────
   if (loading) return <LoadingSpinner fullPage />;
