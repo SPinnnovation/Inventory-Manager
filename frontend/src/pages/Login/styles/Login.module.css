@@ -3,27 +3,27 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at top right, #1e1b4b 0%, #0f172a 60%, #020617 100%);
+  background: radial-gradient(circle at top right, #1e1b4b 0%, #0f172a 65%, #020617 100%);
   padding: var(--space-lg);
 
   /* Override text and surface tokens locally for dark card contrast */
   --color-text: #f8fafc;
   --color-text-muted: #cbd5e1;
   --color-text-light: #94a3b8;
-  --color-border: rgba(255, 255, 255, 0.1);
-  --color-surface: rgba(15, 23, 42, 0.4);
+  --color-border: rgba(255, 255, 255, 0.12);
+  --color-surface: rgba(15, 23, 42, 0.55);
 }
 
 .card {
   background: var(--color-surface);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-xl);
   padding: var(--space-2xl);
   width: 100%;
   max-width: 420px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 30px rgba(79, 70, 229, 0.15);
   animation: fadeUp 0.5s var(--transition-bounce);
 }
 
@@ -32,18 +32,18 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-sm);
-  margin-bottom: var(--space-sm);
+  margin-bottom: var(--space-xs);
 }
 .brandIcon { 
-  font-size: 2rem;
-  filter: drop-shadow(0 2px 8px rgba(79, 70, 229, 0.3));
+  font-size: 2.25rem;
+  filter: drop-shadow(0 4px 12px rgba(79, 70, 229, 0.4));
 }
 .brandName {
   font-size: var(--text-2xl);
-  font-weight: 700;
+  font-weight: 800;
   color: var(--color-text);
-  letter-spacing: -0.020em;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  letter-spacing: -0.025em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .subtitle {
@@ -51,6 +51,7 @@
   color: var(--color-text-muted);
   font-size: var(--text-sm);
   margin-bottom: var(--space-xl);
+  font-weight: 500;
 }
 
 .form {
@@ -65,10 +66,10 @@
   color: var(--color-text-muted);
   margin-top: var(--space-lg);
 }
-.link { color: #818cf8; font-weight: 500; transition: color var(--transition-fast); }
+.link { color: #818cf8; font-weight: 600; transition: color var(--transition-fast); }
 .link:hover { color: #a5b4fc; text-decoration: none; }
 
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(24px); }
   to   { opacity: 1; transform: translateY(0); }
 }

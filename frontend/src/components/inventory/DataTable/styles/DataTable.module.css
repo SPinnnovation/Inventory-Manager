@@ -3,36 +3,46 @@
 .wrapper {
   background: var(--color-surface);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-premium);
   overflow-x: auto;
+  border: 1px solid var(--color-border);
 }
 .table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
 .table th {
-  text-align: left; padding: var(--space-sm) var(--space-md);
+  text-align: left; padding: var(--space-md) var(--space-md);
   color: var(--color-text-muted); font-weight: 600; font-size: var(--text-xs);
   text-transform: uppercase; letter-spacing: .05em;
-  border-bottom: 1px solid var(--color-border); background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border); background: #f8fafc;
   white-space: nowrap;
 }
 .table td {
-  padding: 0.75rem var(--space-md);
+  padding: 0.85rem var(--space-md);
   border-bottom: 1px solid var(--color-border);
   color: var(--color-text); vertical-align: middle;
-}
-.table tr:last-child td { border-bottom: none; }
-.table tr:hover td { background: #f8fafc; }
-
-.actionsHead { width: 80px; text-align: center; }
-.actions     { text-align: center; white-space: nowrap; display: flex; gap: 4px; justify-content: center; }
-
-.btnEdit, .btnDelete {
-  border: none; border-radius: var(--radius-sm);
-  width: 1.75rem; height: 1.75rem; cursor: pointer;
-  font-size: var(--text-sm); display: inline-flex;
-  align-items: center; justify-content: center;
   transition: background var(--transition-fast);
 }
+.table tr {
+  position: relative;
+  transition: all var(--transition-fast);
+}
+.table tr:last-child td { border-bottom: none; }
+.table tr:hover td {
+  background: rgba(79, 70, 229, 0.02);
+}
+
+.actionsHead { width: 80px; text-align: center; }
+.actions     { text-align: center; white-space: nowrap; display: flex; gap: 6px; justify-content: center; }
+
+.btnEdit, .btnDelete {
+  border: none; border-radius: var(--radius-md);
+  width: 2rem; height: 2rem; cursor: pointer;
+  font-size: var(--text-sm); display: inline-flex;
+  align-items: center; justify-content: center;
+  transition: all var(--transition-fast) var(--transition-bounce);
+}
 .btnEdit   { background: var(--color-primary-light); color: var(--color-primary); }
-.btnEdit:hover   { background: #bfdbfe; }
+.btnEdit:hover   { background: #bfdbfe; transform: scale(1.08); }
+.btnEdit:active   { transform: scale(0.95); }
 .btnDelete { background: var(--color-error-light); color: var(--color-error); }
-.btnDelete:hover { background: #fecaca; }
+.btnDelete:hover { background: #fecaca; transform: scale(1.08); }
+.btnDelete:active { transform: scale(0.95); }

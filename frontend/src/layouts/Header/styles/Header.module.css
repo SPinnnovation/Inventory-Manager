@@ -57,13 +57,26 @@
   height: 16px;
   padding: 0 3px;
   border-radius: 9999px;
-  background: #ef4444;
+  background: var(--color-error-gradient, #ef4444);
   color: #fff;
   font-size: 10px;
   font-weight: 700;
   line-height: 16px;
   text-align: center;
   pointer-events: none;
+  animation: pulseBadge 2s infinite;
+}
+
+@keyframes pulseBadge {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
 }
 
 /* ── Dropdown panel ────────────────────────────────────────────────────── */
@@ -77,13 +90,15 @@
   max-height: 420px;
   display: flex;
   flex-direction: column;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md, 8px);
-  box-shadow: var(--shadow-lg);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: var(--shadow-lg), 0 10px 30px -10px rgba(15, 23, 42, 0.15);
   overflow: hidden;
   transform-origin: top right;
-  animation: slideDown 250ms var(--transition-bounce);
+  animation: slideDown 280ms var(--transition-bounce);
 }
 @keyframes slideDown {
   from { opacity: 0; transform: translateY(-8px) scale(0.95); }

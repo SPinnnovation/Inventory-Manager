@@ -6,6 +6,14 @@
   --color-primary:        #4f46e5; /* indigo-600 */
   --color-primary-hover:  #4338ca; /* indigo-700 */
   --color-primary-light:  rgba(79, 70, 229, 0.08);
+  
+  /* Modern Gradients */
+  --color-primary-gradient:       linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+  --color-primary-gradient-hover: linear-gradient(135deg, #4338ca 0%, #4f46e5 100%);
+  --color-success-gradient:       linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  --color-warning-gradient:       linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+  --color-error-gradient:         linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+  --color-info-gradient:          linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%);
 
   /* Surfaces - Clean Slate */
   --color-bg:       #f8fafc; /* slate-50 */
@@ -52,14 +60,17 @@
   --shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
   --shadow-lg: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 10px 10px -5px rgba(15, 23, 42, 0.04);
   --shadow-glow: 0 0 12px rgba(79, 70, 229, 0.24);
+  --shadow-premium: 0 10px 25px -5px rgba(15, 23, 42, 0.04), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+  --shadow-glow-success: 0 0 12px rgba(16, 185, 129, 0.25);
+  --shadow-glow-error: 0 0 12px rgba(239, 68, 68, 0.25);
 
   /* Layout */
   --sidebar-width:  260px;
   --header-height:  64px;
 
   /* Transitions */
-  --transition-fast: 150ms ease;
-  --transition-base: 250ms ease;
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
   --transition-smooth: cubic-bezier(0.16, 1, 0.3, 1);
 

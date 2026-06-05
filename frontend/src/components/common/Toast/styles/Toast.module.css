@@ -20,11 +20,15 @@
   font-size: var(--text-sm);
   animation: slideIn var(--transition-base) var(--transition-bounce);
   border-left: 4px solid transparent;
+  transition: all var(--transition-fast) var(--transition-bounce);
 }
-.success { background: var(--color-success-light); border-color: var(--color-success); }
-.error   { background: var(--color-error-light);   border-color: var(--color-error);   }
-.warning { background: var(--color-warning-light); border-color: var(--color-warning); }
-.info    { background: var(--color-info-light);    border-color: var(--color-info);    }
+.toast:hover {
+  transform: translateY(-2px);
+}
+.success { background: var(--color-success-light); border-color: var(--color-success); box-shadow: var(--shadow-lg), var(--shadow-glow-success); }
+.error   { background: var(--color-error-light);   border-color: var(--color-error);   box-shadow: var(--shadow-lg), var(--shadow-glow-error); }
+.warning { background: var(--color-warning-light); border-color: var(--color-warning); box-shadow: var(--shadow-lg), 0 0 12px rgba(245, 158, 11, 0.15); }
+.info    { background: var(--color-info-light);    border-color: var(--color-info);    box-shadow: var(--shadow-lg), 0 0 12px rgba(14, 165, 233, 0.15); }
 
 .icon {
   font-size: var(--text-base);
@@ -37,7 +41,7 @@
 .warning .icon { color: var(--color-warning); }
 .info    .icon { color: var(--color-info);    }
 
-.message { flex: 1; color: var(--color-text); line-height: 1.5; }
+.message { flex: 1; color: var(--color-text); line-height: 1.5; font-weight: 500; }
 
 .close {
   background: none;
