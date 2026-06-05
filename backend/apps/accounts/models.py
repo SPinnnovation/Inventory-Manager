@@ -10,10 +10,19 @@ class User(AbstractUser):
     Custom User model that extends the default Django AbstractUser.
     """
     class Role(models.TextChoices):
-        ADMIN = 'admin', 'Admin'
-        FLOOR_MANAGER = 'floor_manager', 'Floor Manager'
-        STAFF = 'staff', 'Staff'
-        VIEWER = 'viewer', 'Viewer'
+        ADMIN = "admin", "Admin"
+        MANAGER = "manager", "Manager"
+        TEAM_LEAD = "team_lead", "Team Lead"
+        TEAM_MEMBER = "team_member", "Team Member"
+        HR_SPECIALIST = "hr_specialist", "HR Specialist"
+        STAFF = "staff", "Staff"
+        VIEWER = "viewer", "Viewer"
+
+    class AccountStatus(models.TextChoices):
+        ACTIVE = "active", "Active"
+        INVITED = "invited", "Invited"
+        SUSPENDED = "suspended", "Suspended"
+        DEACTIVATED = "deactivated", "Deactivated"
         
     username = None  # Remove the username field
     email = models.EmailField(unique=True, db_index=True) # Use email as the unique identifier
@@ -23,6 +32,30 @@ class User(AbstractUser):
         default=Role.VIEWER,
         db_index=True,
     )
+    organization = models.ForeignKey(
+        "organization.Organization" ,
+        on_delete=models.PROTECT,
+        related_name='users',
+        null=True,
+        blank=True,
+        db_index=True,
+    )
+    account_status = models.CharField(
+        max_length=20,
+        choices=AccountStatus.choices,
+        default=AccountStatus.ACTIVE,
+        db_index=True,
+    )
+    must_change_password = models.BooleanField(default=False)
+    credentials_sent_at = models.DateTimeField(null=True, blank=True)
+    credentials_sent_by = models.ForeignKey(
+        "self",
+        on_delete=models.PROTECT,
+        related_name="credential_user_created",
+        null=True,
+        blank=True,       
+    )
+
     
     USERNAME_FIELD = 'email'  # Set email as the unique identifier for authentication
     REQUIRED_FIELDS = ['first_name', 'last_name']  # Fields required when creating a superuser
