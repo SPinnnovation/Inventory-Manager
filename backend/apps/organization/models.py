@@ -64,7 +64,7 @@ class Department(TimeStampedModel):
 
     organization = models.ForeignKey(Organization, on_delete=models.PROTECT, related_name="departments")    
     name = models.CharField(max_length=255)
-    code = models.SlugField(max_length=60, unique=True, db_index=True)
+    code = models.SlugField(max_length=60, db_index=True)
     department_type = models.CharField(max_length=40, choices=DepartmentType.choices, default=DepartmentType.ADMINISTRATION)
     description = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
@@ -118,7 +118,7 @@ class Team(TimeStampedModel):
     organization = models.ForeignKey(Organization, on_delete=models.PROTECT, related_name="teams")
     department = models.ForeignKey(Department, on_delete=models.PROTECT, related_name="teams")
     name = models.CharField(max_length=255)
-    code = models.SlugField(max_length=60, unique=True, db_index=True)
+    code = models.SlugField(max_length=60, db_index=True)
     purpose = models.TextField(blank=True)
     manager = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -139,6 +139,15 @@ class Team(TimeStampedModel):
 
     def __str__(self):
         return f"{self.organization.code} / {self.name}"
+
+    def clean(self):
+        """
+        Perform validation checks on the model instance.
+        """
+        if self.department and self.department.organization_id != self.organization_id:
+            raise ValidationError("Team department organization mismatch.")
+        if self.manager and self.manager.organization_id != self.organization_id:
+            raise ValidationError("Team manager organization mismatch.")
 
 
 
@@ -195,6 +204,12 @@ class TeamMembership(TimeStampedModel):
         """
         if self.team.organization_id != self.organization_id:
             raise ValidationError("Team membership organization mismatch.")
+        if self.user.organization_id != self.organization_id:
+            raise ValidationError("Member user organization mismatch.")
+        if self.assigned_by and self.assigned_by.organization_id != self.organization_id:
+            raise ValidationError("Assigned by user organization mismatch.")
+        if self.position.organization_id != self.organization_id:
+            raise ValidationError("Position organization mismatch.")
         if self.ends_at and self.ends_at < self.starts_at:
             raise ValidationError("Membership end date cannot be before start date.")
 
@@ -235,6 +250,10 @@ class TeamLeadAssignment(TimeStampedModel):
         """
         if self.team.organization_id != self.organization_id:
             raise ValidationError("Team lead assignment organization mismatch.")
+        if self.lead.organization_id != self.organization_id:
+            raise ValidationError("Lead user organization mismatch.")
+        if self.assigned_by.organization_id != self.organization_id:
+            raise ValidationError("Assigned by user organization mismatch.")
         if self.ends_at and self.ends_at < self.starts_at:
             raise ValidationError("Lead assignment end date cannot be before start date.")
 
@@ -274,6 +293,10 @@ class ReportingLine(TimeStampedModel):
         """
         if self.reporter_id == self.reports_to_id:
             raise ValidationError("A user cannot report to themselves.")
+        if self.reporter.organization_id != self.organization_id:
+            raise ValidationError("Reporter user organization mismatch.")
+        if self.reports_to.organization_id != self.organization_id:
+            raise ValidationError("Superior user (reports_to) organization mismatch.")
         if self.department and self.department.organization_id != self.organization_id:
             raise ValidationError("Reporting department organization mismatch.")
         if self.team and self.team.organization_id != self.organization_id:

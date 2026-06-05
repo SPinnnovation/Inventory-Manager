@@ -77,7 +77,7 @@ class User(AbstractUser):
     @property
     def can_approve_orders(self):
         """True for roles permitted to approve POs and WOs."""
-        return self.role in (self.Role.ADMIN, self.Role.FLOOR_MANAGER)  # Only Admins and Floor Managers can approve orders
+        return self.role in (self.Role.ADMIN, self.Role.MANAGER)  # Only Admins and Floor Managers can approve orders
     
     
 class Profile(models.Model):
