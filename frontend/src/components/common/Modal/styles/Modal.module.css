@@ -1,9 +1,11 @@
 .overlay {
   position: fixed; inset: 0;
-  background: rgba(0,0,0,.45);
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   display: flex; align-items: center; justify-content: center;
   z-index: 1000; padding: var(--space-lg);
-  animation: fadeIn 150ms ease;
+  animation: fadeIn 200ms ease;
 }
 .dialog {
   background: var(--color-surface);
@@ -11,7 +13,7 @@
   box-shadow: var(--shadow-lg);
   display: flex; flex-direction: column;
   max-height: 90vh; overflow: hidden;
-  animation: slideUp 200ms ease;
+  animation: slideUp 350ms var(--transition-bounce);
   width: 100%;
 }
 .sm  { max-width: 400px; }

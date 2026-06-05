@@ -37,9 +37,15 @@
   background: transparent;
   border-radius: var(--radius-md, 6px);
   cursor: pointer;
-  transition: background 0.15s;
+  transition: all var(--transition-fast) var(--transition-bounce);
 }
-.bellBtn:hover { background: var(--color-border); }
+.bellBtn:hover { 
+  background: var(--color-border);
+  transform: scale(1.08);
+}
+.bellBtn:active {
+  transform: scale(0.95);
+}
 
 .bellIcon { font-size: 18px; line-height: 1; }
 
@@ -74,8 +80,14 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md, 8px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  box-shadow: var(--shadow-lg);
   overflow: hidden;
+  transform-origin: top right;
+  animation: slideDown 250ms var(--transition-bounce);
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .dropdownHeader {

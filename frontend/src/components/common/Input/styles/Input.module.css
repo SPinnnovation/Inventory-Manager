@@ -21,7 +21,7 @@
 .input::placeholder { color: var(--color-text-light); }
 .input:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px var(--color-primary-light);
+  box-shadow: var(--shadow-glow);
 }
 .inputError { border-color: var(--color-error); }
 .inputError:focus { box-shadow: 0 0 0 3px var(--color-error-light); }
